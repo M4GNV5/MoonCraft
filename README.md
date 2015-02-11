@@ -25,43 +25,26 @@ Even though CPL is based on CommandblocksJS (and jison (for parsing cpl code))
 ```javascript
 
 a = 1;
-
 a += 3;
-
 a *= 3;
 
-
-
 b = 3;
-
 b *= a;
-
-
 
 outputAll();
 
-
-
 while(a < 42)
-
 {
-
 	a++;
 	if(a == b)
 		out("if a isnt 36 now smomething is wrong");
-
 }
 
 
 
 function outputAll()
-
 {
-
 	out(a);
 	out(b);
-
 }
-
-
 ```
