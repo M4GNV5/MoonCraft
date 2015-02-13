@@ -8,7 +8,7 @@ Even though CPL is based on CommandblocksJS (and jison (for parsing cpl code))
 - integer
 - strings
 - functions
-- if / if else
+- if
 - while / do while
 - for
 
@@ -23,7 +23,6 @@ Even though CPL is based on CommandblocksJS (and jison (for parsing cpl code))
 
 ##Example code
 ```javascript
-
 a = 1;
 a += 3;
 a *= 3;
@@ -39,8 +38,6 @@ while(a < 42)
 	if(a == b)
 		out("if a isnt 36 now smomething is wrong");
 }
-
-
 
 function outputAll()
 {
