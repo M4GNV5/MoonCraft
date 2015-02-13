@@ -34,7 +34,7 @@
 [0-9]+                   { return 'NUMBER'; }
 [a-zA-Z_][a-zA-Z_0-9]*   { return 'CHAR_SEQUENCE'; }
 
-\"[a-zA-Z0-9\s]*\"       { return 'STRING'; } //"
+\"[a-zA-Z0-9!§$%&/()=?{}#+_.:,\s]*\" { return 'STRING'; } //"
 
 <<EOF>>                  { return 'EOF'; }
 \s+                      { /* ignore */ }
@@ -74,34 +74,34 @@ EmptyArray
 
 AssignmentOperator
 	: "="
-		{ $$ = function(left, right) { left.set(right); } }
+		{ $$ = function(left, right) { checkOperator(left, right, "set", "=", @1); left.set(right); } }
 	| "+="
-		{ $$ = function(left, right) { onlyInteger(left, @1); left.add(right); }; }
+		{ $$ = function(left, right) { checkOperator(left, right, "add", "+=", @1); left.add(right); }; }
 	| "-="
-		{ $$ = function(left, right) { onlyInteger(left, @1); left.remove(right); }; }
+		{ $$ = function(left, right) { checkOperator(left, right, "remove", "-=", @1); left.remove(right); }; }
 	| "*="
-		{ $$ = function(left, right) { onlyInteger(left, @1); left.multiplicate(right); }; }
+		{ $$ = function(left, right) { checkOperator(left, right, "multiplicate", "*=", @1); left.multiplicate(right); }; }
 	| "/="
-		{ $$ = function(left, right) { onlyInteger(left, @1); left.divide(right); }; }
+		{ $$ = function(left, right) { checkOperator(left, right, "divide", "/=", @1); left.divide(right); }; }
 	;
 SingleAssignmentOperator
 	: "++"
-		{ $$ = function(left) { onlyInteger(left, @1); left.add(1); }; }
+		{ $$ = function(left) { checkOperator(left, {type: left.type || left.constructor.name}, "add", "++", @1); left.add(1); }; }
 	| "--"
-		{ $$ = function(left) { onlyInteger(left, @1); left.add(1); }; }
+		{ $$ = function(left) { checkOperator(left, {type: left.type || left.constructor.name}, "remove", "--", @1); left.remove(1); }; }
 	;
 
 ComparationOperator
 	: "=="
-		{ $$ = function(left, right, callback) { return left.isExact(right, callback); }; }
+		{ $$ = function(left, right, callback, other) { checkOperator(left, other, "isExact", "==", @1); return left.isExact(right, callback); }; }
 	| ">"
-		{ $$ = function(left, right, callback) { onlyInteger(left, @1); return left.isBetween(right + 1, '*', callback); }; }
+		{ $$ = function(left, right, callback, other) { checkOperator(left, other, "isBetween", ">", @1); return left.isBetween(right + 1, '*', callback); }; }
 	| "<"
-		{ $$ = function(left, right, callback) { onlyInteger(left, @1); return left.isBetween('*', right - 1, callback); }; }
+		{ $$ = function(left, right, callback, other) { checkOperator(left, other, "isBetween", "<", @1); return left.isBetween('*', right - 1, callback); }; }
 	| ">="
-		{ $$ = function(left, right, callback) { onlyInteger(left, @1); return left.isBetween(right, '*', callback); }; }
+		{ $$ = function(left, right, callback, other) { checkOperator(left, other, "isBetween", ">=", @1); return left.isBetween(right, '*', callback); }; }
 	| "<="
-		{ $$ = function(left, right, callback) { onlyInteger(left, @1); return left.isBetween('*', right, callback); }; }
+		{ $$ = function(left, right, callback, other) { checkOperator(left, other, "isBetween", "<=", @1); return left.isBetween('*', right, callback); }; }
 	;
 
 
@@ -193,15 +193,11 @@ ParameterList
 InlineVariable
 	: NUMBER
 		{
-			$$ = new Runtime.Integer(parseInt($1), "const"+$1);
-			$$.initValue = parseInt($1);
+			$$ = parseInt($1);
 		}
 	| STRING
 		{
-			var val = $1.replace(/\"/g, "");
-			$$ = new Runtime.String();
-			$$.set(val);
-			$$.initValue = val;
+			$$ = $1.replace(/\"/g, "");
 		}
 	| FUNCTION '(' CHAR_SEQUENCE ParameterDefinitionList ')' Statement
 		{
@@ -274,7 +270,7 @@ ValidateExpression
 				var cp = vars[$1].clone();
 				cp.remove($3);
 
-				return $2(cp, 0, callback);
+				return $2(cp, 0, callback, $3);
 			};
 		}
 	| CHAR_SEQUENCE ComparationOperator CHAR_SEQUENCE
@@ -287,7 +283,7 @@ ValidateExpression
 				var cp = vars[$1].clone();
 				cp.remove(vars[$3]);
 
-				return $2(cp, 0, callback);
+				return $2(cp, 0, callback, vars[$3]);
 			};
 		}
 	;
@@ -350,9 +346,20 @@ ForStatement
 
 %%
 
-function onlyInteger(left, line)
+function checkOperator(obj, other, member, operator, line)
 {
-	Util.assert(typeof left != 'object' || left instanceof Runtime.Integer, "Strings only support '=' and '==' at line "+line.first_line);
+	var type = obj.type || obj.constructor.name;
+	var otherType = other.type || other.constructor.name;
+
+	Util.assert(typeof obj[member] != 'undefined', "Object of type '" + type + "' does not support operator '" + operator + "' at line " + line.first_line);
+
+	if(typeof other == 'object')
+	{
+		Util.assert(
+			type == otherType || typeof other["to"+type] != 'undefined',
+			"Type mismatch: '" + type + "' " + operator + " '" + otherType + "' at line " + line.first_line
+		);
+	}
 }
 
 function checkUndefined(name, line)
@@ -384,25 +391,24 @@ function createCplFunction(params, body)
 
 function variableAssignment(name, operator, right)
 {
-	if((typeof vars[name] == 'undefined' && right instanceof Runtime.Integer) || (vars[name] instanceof Container && right instanceof Runtime.Integer))
-		vars[name] = new Runtime.Integer(0, name);
-	else if(typeof vars[name] == 'undefined' || (vars[name] instanceof Container && !(right instanceof Container)))
-		vars[name] = right.constructor.call();
-
-	if(typeof vars[name].initValue != 'undefined')
-		delete vars[name].initValue;
+	if(typeof vars[name] == 'undefined')
+	{
+		if(right instanceof Runtime.Integer || typeof right == 'number')
+			vars[name] = new Runtime.Integer(0, name);
+		else if(typeof right == 'string')
+			vars[name] = new Runtime.String(name);
+		else
+			vars[name] = Object.create(right.constructor.prototype);
+	}
 
 	operator(vars[name], right);
-}
-
-function variableComparation(name, operator, other)
-{
-
 }
 
 function Container(value)
 {
 	this.value = value;
+
+	this.type = value.constructor.name;
 
 	this.set = function(val)
 	{
@@ -421,7 +427,6 @@ function Container(value)
 	}
 }
 
-var vars = {};
 //assign api functions to vars
 for(var name in cplApi)
 	vars[name] = new Container(cplApi[name]);

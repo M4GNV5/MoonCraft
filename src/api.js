@@ -1,10 +1,11 @@
-var cplApi = {};
+var cplApi = cplApi || {};
+var vars =  vars || {};
 
 cplApi.out = function(variable)
 {
     var t = new Chat.Tellraw("Output: ");
-    if(typeof variable.initValue != 'undefined')
-        t.extra.push(new Chat.Message(variable.initValue));
+    if(typeof variable.toTellrawExtra == 'undefined')
+        t.extra.push(new Chat.Message(variable.toString()));
     else
         t.extra.push(variable.toTellrawExtra());
     t.tell(new Entities.Player("@a"));
@@ -16,13 +17,12 @@ cplApi.tellraw = function()
 
     for(var i = 0; i < arguments.length; i++)
     {
-        var extra;
-        if(typeof arguments[i].initValue != 'undefined')
-            extra = new Chat.Message(arguments[i].initValue);
-        else
-            extra = arguments[i].toTellrawExtra();
+        var obj = vars[arguments[i]] || arguments[i];
 
-        t.extra.push(extra);
+        if(typeof obj.toTellrawExtra != 'undefined')
+            t.extra.push(obj.toTellrawExtra());
+        else
+            t.extra.push(new Chat.Message(obj.toString()));
     }
 
     t.tell(new Entities.Player("@a"));

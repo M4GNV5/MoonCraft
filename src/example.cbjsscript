@@ -11,11 +11,10 @@ while(a < 42)
 {
     a++;
     if(a == b)
-        out("if a isnt 36 now smomething is wrong");
+        tellraw("if a isnt 36 now smomething is wrong");
 }
 
 function outputAll()
 {
-    out(a);
-    out(b);
+    tellraw("Value of a: ", a, "\nValue of b: ", b);
 }
