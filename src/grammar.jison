@@ -1,6 +1,10 @@
 ﻿%lex
 %%
 
+// tokens
+
+\s+                      { /* ignore */ }
+
 "=="                     { return '=='; }
 "<"                      { return '<'; }
 ">"                      { return '>'; }
@@ -24,26 +28,33 @@
 "}"                      { return '}'; }
 
 'function'               { return 'FUNCTION'; }
+'api'                    { return 'API'; }
+'return'                 { return 'RETURN'; }
+
 'if'                     { return 'IF'; }
-'else'                   { return 'ELSE'; }
 
 'while'                  { return 'WHILE'; }
 'do'                     { return 'DO'; }
 'for'                    { return 'FOR'; }
 
+'true'                   { return 'TRUE'; }
+'false'                  { return 'FALSE'; }
+
 [0-9]+                   { return 'NUMBER'; }
 [a-zA-Z_][a-zA-Z_0-9]*   { return 'CHAR_SEQUENCE'; }
 
-\"[a-zA-Z0-9!§$%&/()=?{}#+_.:,\s]*\" { return 'STRING'; } //"
+'\n'                     { return 'NEWLINE'; }
+
+\"[a-zA-Z0-9!§$%&/()=?{}#+_.:,\s]*\" { return 'STRING'; } //" pls sublime
 
 <<EOF>>                  { return 'EOF'; }
-\s+                      { /* ignore */ }
 
 /lex
 
-%start Program
 
 %%
+
+// pls sublime again
 
 Program
 	: StatementList EOF
@@ -52,56 +63,58 @@ Program
 			{
 				for(var i = 0; i < $1.length; i++)
 				{
-					$1[i]();
+					if(typeof $1[i] != 'undefined')
+						$1[i]();
 				}
 			};
 		}
 	;
 
 StatementList
-	: StatementList Statement
+	: StatementList Statement StatementSeperator
 		{ $$ = $1.concat($2); }
-	| EmptyArray Statement
-		{ $$ = $1.concat($2); }
+	|
+		{ $$ = []; }
 	;
 
-EmptyArray
-	:
-		{ $$ = []; }
+StatementSeperator
+	: ';'
+	| 'NEWLINE'
+	|
 	;
 
 
 
 AssignmentOperator
 	: "="
-		{ $$ = function(left, right) { checkOperator(left, right, "set", "=", @1); left.set(right); } }
+		{ $$ = function(left, right) { checkOperator(left, "set", "=", @1); left.set(right); } }
 	| "+="
-		{ $$ = function(left, right) { checkOperator(left, right, "add", "+=", @1); left.add(right); }; }
+		{ $$ = function(left, right) { checkOperator(left, "add", "+=", @1); left.add(right); }; }
 	| "-="
-		{ $$ = function(left, right) { checkOperator(left, right, "remove", "-=", @1); left.remove(right); }; }
+		{ $$ = function(left, right) { checkOperator(left, "remove", "-=", @1); left.remove(right); }; }
 	| "*="
-		{ $$ = function(left, right) { checkOperator(left, right, "multiplicate", "*=", @1); left.multiplicate(right); }; }
+		{ $$ = function(left, right) { checkOperator(left, "multiplicate", "*=", @1); left.multiplicate(right); }; }
 	| "/="
-		{ $$ = function(left, right) { checkOperator(left, right, "divide", "/=", @1); left.divide(right); }; }
+		{ $$ = function(left, right) { checkOperator(left, "divide", "/=", @1); left.divide(right); }; }
 	;
 SingleAssignmentOperator
 	: "++"
-		{ $$ = function(left) { checkOperator(left, {type: left.type || left.constructor.name}, "add", "++", @1); left.add(1); }; }
+		{ $$ = function(left) { checkOperator(left, "add", "++", @1); left.add(1); }; }
 	| "--"
-		{ $$ = function(left) { checkOperator(left, {type: left.type || left.constructor.name}, "remove", "--", @1); left.remove(1); }; }
+		{ $$ = function(left) { checkOperator(left, "remove", "--", @1); left.remove(1); }; }
 	;
 
 ComparationOperator
 	: "=="
-		{ $$ = function(left, right, callback, other) { checkOperator(left, other, "isExact", "==", @1); return left.isExact(right, callback); }; }
+		{ $$ = function(left, right, callback, other) { checkOperator(left, "isExact", "==", @1); return left.isExact(right, callback); }; }
 	| ">"
-		{ $$ = function(left, right, callback, other) { checkOperator(left, other, "isBetween", ">", @1); return left.isBetween(right + 1, '*', callback); }; }
+		{ $$ = function(left, right, callback, other) { checkOperator(left, "isBetween", ">", @1); return left.isBetween(right + 1, '*', callback); }; }
 	| "<"
-		{ $$ = function(left, right, callback, other) { checkOperator(left, other, "isBetween", "<", @1); return left.isBetween('*', right - 1, callback); }; }
+		{ $$ = function(left, right, callback, other) { checkOperator(left, "isBetween", "<", @1); return left.isBetween('*', right - 1, callback); }; }
 	| ">="
-		{ $$ = function(left, right, callback, other) { checkOperator(left, other, "isBetween", ">=", @1); return left.isBetween(right, '*', callback); }; }
+		{ $$ = function(left, right, callback, other) { checkOperator(left, "isBetween", ">=", @1); return left.isBetween(right, '*', callback); }; }
 	| "<="
-		{ $$ = function(left, right, callback, other) { checkOperator(left, other, "isBetween", "<=", @1); return left.isBetween('*', right, callback); }; }
+		{ $$ = function(left, right, callback, other) { checkOperator(left, "isBetween", "<=", @1); return left.isBetween('*', right, callback); }; }
 	;
 
 
@@ -110,7 +123,8 @@ Statement
 	: Block
 	| AssignStatement
 	| FunctionCall
-	| FunctionDefinition
+	| ApiDefinition
+	| ReturnStatement
 	| IfStatement
 	| WhileStatement
 	| DoWhileStatement
@@ -119,90 +133,244 @@ Statement
 
 
 
-FunctionDefinition
-	: FUNCTION CHAR_SEQUENCE '(' ')' Statement
+ApiDefinition
+	: 'API' CHAR_SEQUENCE '(' ArgumentDefinitionList ')' Block
 		{
-			vars[$2] = createCplFunction([], $5);
-			$$ = function() {};
-		}
-	| FUNCTION CHAR_SEQUENCE '(' CHAR_SEQUENCE ParameterList ')' Statement
-		{
-			var args = $4.concat($5);
-			vars[$2] = createCplFunction(args, $7);
-			$$ = function() {};
-		}
-	;
+			$$ = undefined;
+			functions[$2] = function()
+			{
+				for(var i = 0; i < arguments.length && i < $4.length; i++)
+					vars[$4[i]] = arguments[i];
 
-FunctionCall
-	: CHAR_SEQUENCE '(' CHAR_SEQUENCE ParameterList ')' ';'
-		{
-			$$ = function()
-			{
-				checkUndefined($1, @1);
-				var args = [vars[$3]].concat($4);
-				return vars[$1].value.apply(undefined, args);
-			};
-		}
-	| CHAR_SEQUENCE '(' CHAR_SEQUENCE ')' ';'
-		{
-			$$ = function()
-			{
-				checkUndefined($1, @1);
-				return vars[$1].value.apply(undefined, [vars[$3]]);
-			};
-		}
-	| CHAR_SEQUENCE '(' InlineVariable ParameterList ')' ';'
-		{
-			$$ = function()
-			{
-				checkUndefined($1, @1);
-				var args = [$3].concat($4);
-				return vars[$1].value.apply(undefined, args);
-			};
-		}
-	| CHAR_SEQUENCE '(' InlineVariable ')' ';'
-		{
-			$$ = function()
-			{
-				checkUndefined($1, @1);
-				return vars[$1].value.apply(undefined, [$3]);
-			};
-		}
-	| CHAR_SEQUENCE '('  ')' ';'
-		{
-			$$ = function()
-			{
-				return vars[$1].value.apply(undefined, []);
+				return $6();
 			}
 		}
 	;
 
+ReturnStatement
+	: 'RETURN' InlineVariable
+		{
+			$$ = function()
+			{
+				return $2();
+			}
+		}
+	;
 
+ArgumentDefinitionList
+	: ArgumentDefinitionList CHAR_SEQUENCE
+		{ $$ = $1.concat($2); }
+	|
+		{ $$ = []; }
+	;
+
+
+
+FunctionCall
+	: CHAR_SEQUENCE '(' ParameterList ')'
+		{
+			$$ = function()
+			{
+				if(vars[$1] instanceof Runtime.Callback)
+				{
+					Util.assert($3.length < 1, "Delegates do not support parameter! At line {0} column {1} to {2}"
+						.format(@3.first_line, @3.first_column, @3.last_column));
+					vars[$1].emit();
+				}
+				else if(functions[$1])
+				{
+					var func = functions[$1];
+
+					var args = [];
+					for(var i = 0; i < $3.length; i++)
+						args[i] = $3[i]();
+
+					return func.apply(undefined, args);
+				}
+				else
+				{
+					Util.assert(!typeMismatch(vars[$1], right), "TypeError: {0} is not a function at line {1} column {2} to {3}"
+						.format($1, @2.first_line, @2.first_column, @2.last_column));
+
+					throw "";
+				}
+			};
+		}
+	;
 
 ParameterList
 	: ParameterList ',' InlineVariable
 		{ $$ = $1.concat($3); }
-	| ParameterList ',' CHAR_SEQUENCE
-		{ $$ = $1.concat($3); }
-	| EmptyArray ',' InlineVariable
-		{ $$ = $1.concat($3); }
-	| EmptyArray ',' CHAR_SEQUENCE
-		{ $$ = $1.concat($3); }
+	| InlineVariable
+		{ $$ = [$1]; }
 	;
 
+
+
 InlineVariable
-	: NUMBER
+	: Boolean
+		{ $$ = function() { return $1; } }
+	| NUMBER
+		{ $$ = function() { return parseInt($1); }; }
+	| 'STRING'
+		{ $$ = function() { return $1.substr(1, $1.length - 2); }; }
+	| CHAR_SEQUENCE
+		{ $$ = function() { checkUndefined($1, @1); return vars[$1] || functions[$1]; }; }
+	| 'FUNCTION' '(' ')' Block
 		{
-			$$ = parseInt($1);
+			$$ = function()
+			{
+				return function()
+				{
+					$4();
+				};
+			}
 		}
-	| STRING
+	| FunctionCall
+		{ $$ = $1; }
+	;
+
+
+
+Boolean
+	: 'TRUE'
+		{ $$ = true; }
+	| 'FALSE'
+		{ $$ = false; }
+	;
+
+
+
+AssignStatement
+	: CHAR_SEQUENCE AssignmentOperator InlineVariable
 		{
-			$$ = $1.replace(/\"/g, "");
+			$$ = function()
+			{
+				var right = $3();
+				if(typeof right == 'undefined')
+					return;
+
+				if(typeof vars[$1] == 'undefined')
+				{
+
+					if(right instanceof Runtime.Boolean || typeof right == 'boolean')
+						vars[$1] = new Runtime.Boolean($1);
+					else if(right instanceof Runtime.Integer || typeof right == 'number')
+						vars[$1] = new Runtime.Integer(0, $1);
+					else if(typeof right == 'string')
+						vars[$1] = new Runtime.String($1);
+					else if(typeof right == 'function')
+						vars[$1] = new Runtime.Callback();
+					else if(typeof Runtime[right.constructor.name] != 'undefined')
+						vars[$1] = new Runtime[right.constructor.name]();
+					else
+						throw "unknown variable type '{0}'".format(right.constructor.name);
+				}
+				else if(typeof vars[$1] != 'object')
+				{
+					if(typeof vars[$1] == 'boolean')
+					{
+						vars[$1] = new Runtime.Boolean(vars[$1], $1);
+					}
+					else if(typeof vars[$1] == 'number')
+					{
+						vars[$1] = new Runtime.Integer(vars[$1], $1);
+					}
+					else if(typeof vars[$1] == 'string')
+					{
+						var val = vars[$1];
+						vars[$1] = new Runtime.String($1);
+						vars[$1].set(val);
+					}
+					else if(typeof vars[$1] == 'function')
+					{
+						var val = vars[$1];
+						vars[$1] = new Runtime.Callback();
+						vars[$1].set(val);
+					}
+				}
+
+				Util.assert(!typeMismatch(vars[$1], right), "Type mismatch: cannot assign {0} to {1} at line {2} column {3} to {4}"
+					.format(right.constructor.name, vars[$1].constructor.name, @2.first_line, @2.first_column, @2.last_column));
+
+
+				$2(vars[$1], right);
+			};
 		}
-	| FUNCTION '(' CHAR_SEQUENCE ParameterDefinitionList ')' Statement
+	;
+
+
+
+ValidateExpression
+	: InlineVariable
 		{
-			var args = $3.concat($4);
-			$$ = createCplFunction(args, $6);
+			$$ = function(callback)
+			{
+				var left = $1();
+
+				Util.assert(!typeMismatch(left, true), "Type mismatch: cannot compare {0} and {1} at line {2} column {3} to {4}"
+					.format("boolean", left.constructor.name, @1.first_line, @1.first_column, @1.last_column));
+
+				if(left instanceof Runtime.Boolean)
+				{
+					return left.isTrue(callback);
+				}
+				else if(typeof left == 'boolean' && left)
+				{
+					call(callback);
+
+					return new MinecraftCommand("testfor @e");
+				}
+				else
+				{
+					return new MinecraftCommand("comparation of {0} and {1} was false".format(left, "true"));
+				}
+
+			};
+		}
+	| InlineVariable ComparationOperator InlineVariable
+		{
+			$$ = function(callback)
+			{
+				var left = $1();
+				var right = $3();
+
+				Util.assert(!typeMismatch(left, right), "Type mismatch: cannot compare {0} and {1} at line {2} column {3} to {4}"
+					.format(right.constructor.name, left.constructor.name, @2.first_line, @2.first_column, @2.last_column));
+
+				if(typeof left != 'object' && typeof right != 'object')
+				{
+					if(left == right)
+					{
+						if(typeof callback != 'undefined')
+							call(callback);
+
+						return new MinecraftCommand("testfor @e");
+					}
+					else
+					{
+						return new MinecraftCommand("comparation of {0} and {1} was false".format(left, right));
+					}
+
+				}
+				else if(typeof left == 'object' && typeof right == 'object')
+				{
+					checkOperator(left, "clone", "clone", @1);
+					checkOperator(left, "remove", "-=", @1);
+
+					var copy = left.clone();
+					copy.remove(right);
+
+					return $2(copy, 0, callback, right);
+				}
+				else
+				{
+					var _left = (typeof left == 'object') ? left : right;
+					var _right = (typeof left == 'object') ? right : left;
+
+					return $2(_left, _right, callback, left);
+				}
+			};
 		}
 	;
 
@@ -215,80 +383,13 @@ Block
 			{
 				for(var i = 0; i < $2.length; i++)
 				{
-					$2[i]();
+					var back = $2[i]();
+					if(typeof back != 'undefined')
+						return back;
 				}
 			}
 		}
 	;
-
-
-
-AssignStatement
-	: CHAR_SEQUENCE AssignmentOperator InlineVariable ';'
-		{
-			$$ = function()
-			{
-				variableAssignment($1, $2, $3);
-			}
-		}
-	| CHAR_SEQUENCE AssignmentOperator CHAR_SEQUENCE ';'
-		{
-			$$ = function()
-			{
-				checkUndefined($3, @3);
-				variableAssignment($1, $2, vars[$3]);
-			}
-		}
-	| CHAR_SEQUENCE AssignmentOperator FunctionCall ';'
-		{
-			$$ = function()
-			{
-				checkUndefined($3, @3);
-				var out = $3();
-				variableAssignment($1, $2, out);
-			}
-		}
-	| CHAR_SEQUENCE SingleAssignmentOperator ';'
-		{
-			$$ = function()
-			{
-				if(typeof vars[$1] == 'undefined')
-					vars[$1] = new Runtime.Integer(0, $1);
-
-				$2(vars[$1]);
-			};
-		}
-	;
-
-ValidateExpression
-	: CHAR_SEQUENCE ComparationOperator InlineVariable
-		{
-			$$ = function(callback)
-			{
-				checkUndefined($1, @1);
-
-				var cp = vars[$1].clone();
-				cp.remove($3);
-
-				return $2(cp, 0, callback, $3);
-			};
-		}
-	| CHAR_SEQUENCE ComparationOperator CHAR_SEQUENCE
-		{
-			$$ = function(callback)
-			{
-				checkUndefined($1, @1);
-				checkUndefined($3, @3);
-
-				var cp = vars[$1].clone();
-				cp.remove(vars[$3]);
-
-				return $2(cp, 0, callback, vars[$3]);
-			};
-		}
-	;
-
-
 
 IfStatement
 	: IF '(' ValidateExpression ')' Statement
@@ -346,87 +447,38 @@ ForStatement
 
 %%
 
-function checkOperator(obj, other, member, operator, line)
+function checkOperator(obj, member, operator, line)
 {
-	var type = obj.type || obj.constructor.name;
-	var otherType = other.type || other.constructor.name;
+	var type = obj.constructor.name;
 
 	Util.assert(typeof obj[member] != 'undefined', "Object of type '" + type + "' does not support operator '" + operator + "' at line " + line.first_line);
-
-	if(typeof other == 'object')
-	{
-		Util.assert(
-			type == otherType || typeof other["to"+type] != 'undefined',
-			"Type mismatch: '" + type + "' " + operator + " '" + otherType + "' at line " + line.first_line
-		);
-	}
 }
 
 function checkUndefined(name, line)
 {
-	Util.assert(typeof vars[name] != 'undefined', "Unknown identifier '"+name+"' at line "+line.first_line+" column "+line.first_column+" to "+line.last_column);
+	Util.assert(vars[name] || functions[name], "Unknown identifier '"+name+"' at line "+line.first_line+" column "+line.first_column+" to "+line.last_column);
 }
 
-function createCplFunction(params, body)
+function typeMismatch(left, right)
 {
-	for(var i = 0; i < params.length; i++)
-	{
-		Util.assert(typeof params[i] == 'string', "Function definition parameter lists only support CHAR_SEQUENCE.");
-	}
-
-	return new Container(function()
-	{
-		args = arguments;
-		call(function()
-		{
-			for(var i = 0; i < args.length; i++)
-			{
-				vars[params[i]] = vars[params[i]] || vars[args[i]].constructor.call();
-				vars[params[i]].set(args[i]);
-			}
-			body();
-		});
-	});
+	if(left.constructor == right.constructor)
+		return false;
+	else if(left instanceof Runtime.Boolean && typeof right == 'boolean')
+		return false;
+	else if(left instanceof Runtime.Integer && typeof right == 'number')
+		return false;
+	else if(left instanceof Runtime.String && typeof right == 'string')
+		return false;
+	else if(left instanceof Runtime.Callback && typeof right == 'function')
+		return false
+	else
+		return true;
 }
 
-function variableAssignment(name, operator, right)
-{
-	if(typeof vars[name] == 'undefined')
-	{
-		if(right instanceof Runtime.Integer || typeof right == 'number')
-			vars[name] = new Runtime.Integer(0, name);
-		else if(typeof right == 'string')
-			vars[name] = new Runtime.String(name);
-		else
-			vars[name] = Object.create(right.constructor.prototype);
-	}
-
-	operator(vars[name], right);
-}
-
-function Container(value)
-{
-	this.value = value;
-
-	this.type = value.constructor.name;
-
-	this.set = function(val)
-	{
-		this.value = val;
-	}
-	this.isExact = function(val, callback)
-	{
-		if(this.value == val)
-			call(callback);
-		else
-			command("CPL if([object Container] == " + val.toString() + ") was false");
-	}
-	this.toTellrawExtra = function()
-	{
-		return new Chat.Message(this.value.toString());
-	}
-}
+var functions = {};
 
 //assign api functions to vars
 for(var name in cplApi)
-	vars[name] = new Container(cplApi[name]);
+{
+	functions[name] = cplApi[name];
+}

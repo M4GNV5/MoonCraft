@@ -1,20 +1,8 @@
-a = 1;
-a += 3;
-a *= 3;
+s = 42;
+s *= 666;
+tellraw("this: ", s, " is the answer to everything evil");
 
-b = 3;
-b *= a;
-
-outputAll();
-
-while(a < 42)
+setTimeout(function()
 {
-    a++;
-    if(a == b)
-        tellraw("if a isnt 36 now smomething is wrong");
-}
-
-function outputAll()
-{
-    tellraw("Value of a: ", a, "\nValue of b: ", b);
-}
+	out("hey");
+}, 3000);
