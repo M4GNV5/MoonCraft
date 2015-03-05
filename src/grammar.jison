@@ -303,6 +303,15 @@ AssignStatement
 				$2(vars[$1], right);
 			};
 		}
+	| IDENTIFIER SingleAssignmentOperator
+		{
+			$$ = function()
+			{
+				checkUndefined($1, @1);
+
+				$2(vars[$1]);
+			}
+		}
 	;
 
 

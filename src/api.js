@@ -32,7 +32,7 @@ cplApi.tellraw = function()
     {
         var obj = vars[arguments[i]] || arguments[i];
 
-        if(typeof obj.toExactTellrawExtra != 'undefined')
+        if(useExactTellraw && typeof obj.toExactTellrawExtra != 'undefined')
             t.extra = t.extra.concat(obj.toExactTellrawExtra());
         else if(typeof obj.toTellrawExtra != 'undefined')
             t.extra.push(obj.toTellrawExtra());
@@ -41,6 +41,12 @@ cplApi.tellraw = function()
     }
 
     t.tell(new Entities.Player("@a"));
+}
+
+var useExactTellraw = true;
+cplApi.exactTellraw = function(enable)
+{
+    useExactTellraw = enable === false ? false : true;
 }
 
 cplApi.setTimeout = function(callback, time)
