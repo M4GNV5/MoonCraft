@@ -5,6 +5,8 @@
 
 \s+                      { /* ignore */ }
 
+'//'.*($|\r\n|\r|\n)     { /* ignore */ }
+
 "=="                     { return '=='; }
 "<"                      { return '<'; }
 ">"                      { return '>'; }
@@ -28,7 +30,7 @@
 "}"                      { return '}'; }
 
 'function'               { return 'FUNCTION'; }
-'api'                    { return 'API'; }
+'lib'                    { return 'LIB'; }
 'return'                 { return 'RETURN'; }
 
 'if'                     { return 'IF'; }
@@ -40,12 +42,11 @@
 'true'                   { return 'TRUE'; }
 'false'                  { return 'FALSE'; }
 
-[0-9]+                   { return 'NUMBER'; }
-[a-zA-Z_][a-zA-Z_0-9]*   { return 'CHAR_SEQUENCE'; }
+'-'?[0-9]+               { return 'NUMBER'; }
 
-'\n'                     { return 'NEWLINE'; }
+[a-zA-Z_][a-zA-Z_0-9]*   { return 'IDENTIFIER'; }
 
-\"[a-zA-Z0-9!§$%&/()=?{}#+_.:,\s]*\" { return 'STRING'; } //" pls sublime
+'"'.*'"'                 { return 'STRING'; }
 
 <<EOF>>                  { return 'EOF'; }
 
@@ -54,7 +55,7 @@
 
 %%
 
-// pls sublime again
+// pls sublime
 
 Program
 	: StatementList EOF
@@ -79,7 +80,6 @@ StatementList
 
 StatementSeperator
 	: ';'
-	| 'NEWLINE'
 	|
 	;
 
@@ -106,15 +106,15 @@ SingleAssignmentOperator
 
 ComparationOperator
 	: "=="
-		{ $$ = function(left, right, callback, other) { checkOperator(left, "isExact", "==", @1); return left.isExact(right, callback); }; }
+		{ $$ = function(left, right, callback) { checkOperator(left, "isExact", "==", @1); return left.isExact(right, callback); }; }
 	| ">"
-		{ $$ = function(left, right, callback, other) { checkOperator(left, "isBetween", ">", @1); return left.isBetween(right + 1, '*', callback); }; }
+		{ $$ = function(left, right, callback) { checkOperator(left, "isBetween", ">", @1); return left.isBetween(right + 1, '*', callback); }; }
 	| "<"
-		{ $$ = function(left, right, callback, other) { checkOperator(left, "isBetween", "<", @1); return left.isBetween('*', right - 1, callback); }; }
+		{ $$ = function(left, right, callback) { checkOperator(left, "isBetween", "<", @1); return left.isBetween('*', right - 1, callback); }; }
 	| ">="
-		{ $$ = function(left, right, callback, other) { checkOperator(left, "isBetween", ">=", @1); return left.isBetween(right, '*', callback); }; }
+		{ $$ = function(left, right, callback) { checkOperator(left, "isBetween", ">=", @1); return left.isBetween(right, '*', callback); }; }
 	| "<="
-		{ $$ = function(left, right, callback, other) { checkOperator(left, "isBetween", "<=", @1); return left.isBetween('*', right, callback); }; }
+		{ $$ = function(left, right, callback) { checkOperator(left, "isBetween", "<=", @1); return left.isBetween('*', right, callback); }; }
 	;
 
 
@@ -123,7 +123,7 @@ Statement
 	: Block
 	| AssignStatement
 	| FunctionCall
-	| ApiDefinition
+	| LibDefinition
 	| ReturnStatement
 	| IfStatement
 	| WhileStatement
@@ -133,8 +133,8 @@ Statement
 
 
 
-ApiDefinition
-	: 'API' CHAR_SEQUENCE '(' ArgumentDefinitionList ')' Block
+LibDefinition
+	: 'LIB' IDENTIFIER '(' ArgumentDefinitionList ')' Block
 		{
 			$$ = undefined;
 			functions[$2] = function()
@@ -158,7 +158,7 @@ ReturnStatement
 	;
 
 ArgumentDefinitionList
-	: ArgumentDefinitionList CHAR_SEQUENCE
+	: ArgumentDefinitionList IDENTIFIER
 		{ $$ = $1.concat($2); }
 	|
 		{ $$ = []; }
@@ -167,7 +167,7 @@ ArgumentDefinitionList
 
 
 FunctionCall
-	: CHAR_SEQUENCE '(' ParameterList ')'
+	: IDENTIFIER '(' ParameterList ')'
 		{
 			$$ = function()
 			{
@@ -203,6 +203,8 @@ ParameterList
 		{ $$ = $1.concat($3); }
 	| InlineVariable
 		{ $$ = [$1]; }
+	|
+		{ $$ = []; }
 	;
 
 
@@ -214,7 +216,7 @@ InlineVariable
 		{ $$ = function() { return parseInt($1); }; }
 	| 'STRING'
 		{ $$ = function() { return $1.substr(1, $1.length - 2); }; }
-	| CHAR_SEQUENCE
+	| IDENTIFIER
 		{ $$ = function() { checkUndefined($1, @1); return vars[$1] || functions[$1]; }; }
 	| 'FUNCTION' '(' ')' Block
 		{
@@ -242,7 +244,7 @@ Boolean
 
 
 AssignStatement
-	: CHAR_SEQUENCE AssignmentOperator InlineVariable
+	: IDENTIFIER AssignmentOperator InlineVariable
 		{
 			$$ = function()
 			{

@@ -6,14 +6,22 @@ cplApi.log = function(message)
     api.log(message.toString());
 }
 
+cplApi.debugging = function(enabled)
+{
+    if(enabled !== false)
+    {
+        command("scoreboard objectives add std.integer dummy RuntimeInteger");
+        command("scoreboard objectives setdisplay sidebar std.integer");
+    }
+    else
+    {
+        command("scoreboard objectives setdisplay sidebar");
+    }
+}
+
 cplApi.out = function(variable)
 {
-    var t = new Chat.Tellraw("Output: ");
-    if(typeof variable.toTellrawExtra == 'undefined')
-        t.extra.push(new Chat.Message(variable.toString()));
-    else
-        t.extra.push(variable.toTellrawExtra());
-    t.tell(new Entities.Player("@a"));
+    cplApi.tellraw("Output: ", variable);
 }
 
 cplApi.tellraw = function()
@@ -43,9 +51,4 @@ cplApi.setTimeout = function(callback, time)
         setTimeout(callback, time);
     else
         throw "Invalid setTimeout callback '{0}'".format(callback);
-}
-
-cplApi.debugging = function()
-{
-    command("scoreboard objectives setdisplay sidebar std.integer");
 }
