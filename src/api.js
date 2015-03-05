@@ -32,7 +32,9 @@ cplApi.tellraw = function()
     {
         var obj = vars[arguments[i]] || arguments[i];
 
-        if(typeof obj.toTellrawExtra != 'undefined')
+        if(typeof obj.toExactTellrawExtra != 'undefined')
+            t.extra = t.extra.concat(obj.toExactTellrawExtra());
+        else if(typeof obj.toTellrawExtra != 'undefined')
             t.extra.push(obj.toTellrawExtra());
         else
             t.extra.push(new Chat.Message(obj.toString()));
@@ -51,4 +53,13 @@ cplApi.setTimeout = function(callback, time)
         setTimeout(callback, time);
     else
         throw "Invalid setTimeout callback '{0}'".format(callback);
+}
+
+cplApi.pi = function()
+{
+    return Runtime.Decimal.Pi;
+}
+cplApi.euler = function()
+{
+    return Runtime.Decimal.Euler;
 }

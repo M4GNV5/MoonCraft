@@ -1,0 +1,16 @@
+pi = pi();
+radius = 1.0;
+
+while(radius <= 20)
+{
+	circumference = radius;
+	circumference *= 2;
+	circumference *= pi;
+
+	area = radius;
+	area *= area;
+	area *= pi;
+
+	tellraw("r = ", radius, " C = ", circumference, " A = ", area);
+	radius += 1;
+}

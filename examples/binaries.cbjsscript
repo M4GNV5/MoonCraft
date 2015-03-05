@@ -1,0 +1,17 @@
+//setup variable
+binary = 1;
+
+debugging(true)
+
+//stop when binary < 0 as 1073741824 * 2 is -2147483648 for minecraft
+while(binary > 0)
+{
+	//output variable
+	out(binary);
+
+	//multiplicate with 2
+	binary *= 2;
+
+	if(binary < 0)
+		debugging(false);
+}

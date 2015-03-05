@@ -8,10 +8,10 @@
 '//'.*($|\r\n|\r|\n)     { /* ignore */ }
 
 "=="                     { return '=='; }
-"<"                      { return '<'; }
-">"                      { return '>'; }
 "<="                     { return '<='; }
 ">="                     { return '>='; }
+"<"                      { return '<'; }
+">"                      { return '>'; }
 
 "="                      { return '='; }
 "+="                     { return '+='; }
@@ -42,11 +42,12 @@
 'true'                   { return 'TRUE'; }
 'false'                  { return 'FALSE'; }
 
-'-'?[0-9]+               { return 'NUMBER'; }
+'-'?[0-9]+'.'[0-9]{0,2}  { return 'DECIMAL'; }
+'-'?[0-9]+               { return 'INTEGER'; }
 
 [a-zA-Z_][a-zA-Z_0-9]*   { return 'IDENTIFIER'; }
 
-'"'.*'"'                 { return 'STRING'; }
+'"'[^"]*'"'                 { return 'STRING'; } //'
 
 <<EOF>>                  { return 'EOF'; }
 
@@ -108,13 +109,13 @@ ComparationOperator
 	: "=="
 		{ $$ = function(left, right, callback) { checkOperator(left, "isExact", "==", @1); return left.isExact(right, callback); }; }
 	| ">"
-		{ $$ = function(left, right, callback) { checkOperator(left, "isBetween", ">", @1); return left.isBetween(right + 1, '*', callback); }; }
+		{ $$ = function(left, right, callback) { checkOperator(left, "isBetween", ">", @1); return left.isBetween(right + 1, undefined, callback); }; }
 	| "<"
-		{ $$ = function(left, right, callback) { checkOperator(left, "isBetween", "<", @1); return left.isBetween('*', right - 1, callback); }; }
+		{ $$ = function(left, right, callback) { checkOperator(left, "isBetween", "<", @1); return left.isBetween(undefined, right - 1, callback); }; }
 	| ">="
-		{ $$ = function(left, right, callback) { checkOperator(left, "isBetween", ">=", @1); return left.isBetween(right, '*', callback); }; }
+		{ $$ = function(left, right, callback) { checkOperator(left, "isBetween", ">=", @1); return left.isBetween(right, undefined, callback); }; }
 	| "<="
-		{ $$ = function(left, right, callback) { checkOperator(left, "isBetween", "<=", @1); return left.isBetween('*', right, callback); }; }
+		{ $$ = function(left, right, callback) { checkOperator(left, "isBetween", "<=", @1); return left.isBetween(undefined, right, callback); }; }
 	;
 
 
@@ -212,8 +213,10 @@ ParameterList
 InlineVariable
 	: Boolean
 		{ $$ = function() { return $1; } }
-	| NUMBER
+	| 'INTEGER'
 		{ $$ = function() { return parseInt($1); }; }
+	| 'DECIMAL'
+		{ $$ = function() { return parseFloat($1); }; $$.decimal = true; }
 	| 'STRING'
 		{ $$ = function() { return $1.substr(1, $1.length - 2); }; }
 	| IDENTIFIER
@@ -254,9 +257,10 @@ AssignStatement
 
 				if(typeof vars[$1] == 'undefined')
 				{
-
 					if(right instanceof Runtime.Boolean || typeof right == 'boolean')
 						vars[$1] = new Runtime.Boolean($1);
+					else if(right instanceof Runtime.Decimal || (typeof right == 'number' && $3.decimal))
+						vars[$1] = new Runtime.Decimal(0, $1);
 					else if(right instanceof Runtime.Integer || typeof right == 'number')
 						vars[$1] = new Runtime.Integer(0, $1);
 					else if(typeof right == 'string')
@@ -363,6 +367,9 @@ ValidateExpression
 					var copy = left.clone();
 					copy.remove(right);
 
+					if(copy instanceof Runtime.Decimal)
+						max /= 100;
+
 					return $2(copy, 0, callback, right);
 				}
 				else
@@ -370,7 +377,9 @@ ValidateExpression
 					var _left = (typeof left == 'object') ? left : right;
 					var _right = (typeof left == 'object') ? right : left;
 
-					return $2(_left, _right, callback, left);
+
+
+					return $2(_left, _right, callback);
 				}
 			};
 		}
@@ -468,6 +477,8 @@ function typeMismatch(left, right)
 	else if(left instanceof Runtime.Boolean && typeof right == 'boolean')
 		return false;
 	else if(left instanceof Runtime.Integer && typeof right == 'number')
+		return false;
+	else if(left instanceof Runtime.Decimal && typeof right == 'number')
 		return false;
 	else if(left instanceof Runtime.String && typeof right == 'string')
 		return false;
