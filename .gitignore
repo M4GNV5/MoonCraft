@@ -1,9 +1,8 @@
 # private script
 src/run_example.bat
 
-# output files
-src/grammar.js
-src/example.js
+# output directory
+src/out/
 
 # sublime workspace file
 *.sublime-workspace

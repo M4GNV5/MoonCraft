@@ -18,6 +18,7 @@
 "-="                     { return '-='; }
 "*="                     { return '*='; }
 "/="                     { return '/='; }
+"%="                     { return '%='; }
 
 "++"                     { return '++'; }
 "--"                     { return '--'; }
@@ -47,7 +48,7 @@
 
 [a-zA-Z_][a-zA-Z_0-9]*   { return 'IDENTIFIER'; }
 
-'"'[^"]*'"'                 { return 'STRING'; } //'
+'"'[^"]*'"'              { return 'STRING'; } //'
 
 <<EOF>>                  { return 'EOF'; }
 
@@ -97,6 +98,8 @@ AssignmentOperator
 		{ $$ = function(left, right) { checkOperator(left, "multiplicate", "*=", @1); left.multiplicate(right); }; }
 	| "/="
 		{ $$ = function(left, right) { checkOperator(left, "divide", "/=", @1); left.divide(right); }; }
+	| "%="
+		{ $$ = function(left, right) { checkOperator(left, "divide", "%=", @1); left.set(right, Runtime.NumberSetMode.divisionRemainder); }; }
 	;
 SingleAssignmentOperator
 	: "++"
@@ -123,7 +126,7 @@ ComparationOperator
 Statement
 	: Block
 	| AssignStatement
-	| FunctionCall
+	| InlineVariable
 	| LibDefinition
 	| ReturnStatement
 	| IfStatement
@@ -168,32 +171,32 @@ ArgumentDefinitionList
 
 
 FunctionCall
-	: IDENTIFIER '(' ParameterList ')'
+	: InlineVariable '(' ParameterList ')'
 		{
 			$$ = function()
 			{
-				if(vars[$1] instanceof Runtime.Callback)
+				var left = $1();
+				if(left instanceof Runtime.Callback)
 				{
 					Util.assert($3.length < 1, "Delegates do not support parameter! At line {0} column {1} to {2}"
 						.format(@3.first_line, @3.first_column, @3.last_column));
-					vars[$1].emit();
+					left.emit();
 				}
-				else if(functions[$1])
+				else if(typeof left == 'function')
 				{
-					var func = functions[$1];
-
 					var args = [];
 					for(var i = 0; i < $3.length; i++)
 						args[i] = $3[i]();
 
-					return func.apply(undefined, args);
+					return left.apply(undefined, args);
 				}
 				else
 				{
-					Util.assert(!typeMismatch(vars[$1], right), "TypeError: {0} is not a function at line {1} column {2} to {3}"
-						.format($1, @2.first_line, @2.first_column, @2.last_column));
+					Util.assert(!typeMismatch(left, function() {}), "TypeError: {0} is not a function at line {1} column {2} to {3}"
+						.format(left, @2.first_line, @2.first_column, @2.last_column));
 
-					throw "";
+					throw "TypeError: {0} is not a function at line {1} column {2} to {3}"
+						.format(left, @2.first_line, @2.first_column, @2.last_column);
 				}
 			};
 		}
@@ -258,8 +261,8 @@ AssignStatement
 				if(typeof vars[$1] == 'undefined')
 				{
 					if(right instanceof Runtime.Boolean || typeof right == 'boolean')
-						vars[$1] = new Runtime.Boolean($1);
-					else if(right instanceof Runtime.Decimal || (typeof right == 'number' && $3.decimal))
+						vars[$1] = new Runtime.Boolean(false, $1);
+					else if(right instanceof Runtime.Decimal || (typeof right == 'number' && ($3.decimal || Math.floor(right) != right)))
 						vars[$1] = new Runtime.Decimal(0, $1);
 					else if(right instanceof Runtime.Integer || typeof right == 'number')
 						vars[$1] = new Runtime.Integer(0, $1);
@@ -267,10 +270,10 @@ AssignStatement
 						vars[$1] = new Runtime.String($1);
 					else if(typeof right == 'function')
 						vars[$1] = new Runtime.Callback();
-					else if(typeof Runtime[right.constructor.name] != 'undefined')
+					else if(typeof Runtime[right.constructor.name] == 'function')
 						vars[$1] = new Runtime[right.constructor.name]();
 					else
-						throw "unknown variable type '{0}'".format(right.constructor.name);
+						vars[$1] = right;
 				}
 				else if(typeof vars[$1] != 'object')
 				{

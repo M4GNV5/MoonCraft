@@ -24,6 +24,8 @@ cplApi.out = function(variable)
     cplApi.tellraw("Output: ", variable);
 }
 
+
+
 cplApi.tellraw = function()
 {
     var t = new Chat.Tellraw();
@@ -47,25 +49,4 @@ var useExactTellraw = true;
 cplApi.exactTellraw = function(enable)
 {
     useExactTellraw = enable === false ? false : true;
-}
-
-cplApi.setTimeout = function(callback, time)
-{
-    time = parseInt(time);
-
-    if(callback instanceof Runtime.Callback)
-        setTimeout(function() { callback.emit(); }, time);
-    else if(typeof callback == 'function')
-        setTimeout(callback, time);
-    else
-        throw "Invalid setTimeout callback '{0}'".format(callback);
-}
-
-cplApi.pi = function()
-{
-    return Runtime.Decimal.Pi;
-}
-cplApi.euler = function()
-{
-    return Runtime.Decimal.Euler;
 }

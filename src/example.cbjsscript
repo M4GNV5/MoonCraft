@@ -1,8 +1,0 @@
-s = 42;
-s *= 666;
-tellraw("this: ", s, " is the answer to everything evil");
-
-setTimeout(function()
-{
-	out("hey");
-}, 3000);

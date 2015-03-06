@@ -1,0 +1,11 @@
+rnd = 5;
+searching = true;
+
+while(searching)
+{
+	rnd = random();
+	out(rnd);
+	
+	if(rnd == 42)
+		searching = false;
+}
