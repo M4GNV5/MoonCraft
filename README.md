@@ -69,9 +69,9 @@ out(variable); // shorthand to tellraw("Output: ", variable);
 debugging(true|false); // show integer values in the scoreboard sidebar
 
 //util
-setTimeout(callback, time); // calls callback after time milliseconds
+setTimeout(callback, time); // calls callback async after time milliseconds
 async(callback); //calls callback async
-command(text); //placed a commandblock with text as command
+command(text); //places a commandblock with text as command
 
 //math
 math.random(); // returns a random number
