@@ -6,22 +6,22 @@ The main concept is that what you write is commandblock logic not code that will
 ##Example
 ```javascript
 // this example will output radius, circumference and area of circle with radius 1 to 20
+fixed pi = math.pi();
+fixed circumference = 0.0;
+fixed area = 0.0;
 
-pi = pi();
-radius = 1.0;
-
-while(radius <= 20)
+tellraw("§cCircle circumference and area for radius 1 to 19§r");
+for(fixed i = 1.0; i <= 19; i++)
 {
-	circumference = radius;
-	circumference *= 2;
-	circumference *= pi;
+	circumference = i;
+	circumference *= 2.0;
+	circumference += pi;
 
-	area = radius;
+	area = i;
 	area *= area;
-	area *= pi;
+	area += pi;
 
-	tellraw("r = ", radius, " C = ", circumference, " A = ", area);
-	radius += 1;
+	tellraw("r = ", i, " C = ", circumference, " A = ", area);
 }
 ```
 [![Cmd](http://i.imgur.com/EkEM8Hn.png)]()
@@ -30,11 +30,11 @@ while(radius <= 20)
 ###Data types
 ```javascript
 // all base types you know from other programming languages are supported
-myBool = true;
-myInt = 5;
-myDecimal = 1.0;
-myString = "hello world";
-myDelegate = function()
+bool myBool = true;
+int myInt = 5;
+fixed myDecimal = 1.0;
+string myString = "hello world";
+delegate myDelegate = function()
 {
 	//...
 };
@@ -53,7 +53,7 @@ while(myBool)
 	}
 	myInt++;
 	
-	for(i = 0; i < myInt; i++)
+	for(int i = 0; i < myInt; i++)
 	{
 		myDecimal += 0.5;
 		//out(variable) is a shorthand to tellraw("Output: ", variable)
@@ -70,20 +70,19 @@ debugging(true|false); // show integer values in the scoreboard sidebar
 
 //util
 setTimeout(callback, time); // calls callback after time milliseconds
+async(callback); //calls callback async
+command(text); //placed a commandblock with text as command
 
 //math
-random(); // returns a random number
-intMax(); // returns 2 ^ 31 - 1 (max value for scores)
-intMin(); // returns - 2 ^ 31 (min value for scores)
-pi(); // returns 3.14
-euler(); // returns 2.72
+math.random(); // returns a random number
+math.randomSeed(seed); //sets the seed for the next random number to seed
+math.pi(); // returns 3.14
+math.euler(); // returns 2.72
 ```
 ###Specialities
 ```javascript
 myDelegate("foo"); // wont work - cant give arguments to delegates
-x = 2 * myInt; // wont work use x = myInt; x *= 2; instead
 
-for(i = 0; i < 30; i++)
-	x++;
-out(x); // will output 10 as everything even bodies of statements are called asynchronously
+x = 2 * myInt; // wont work use x = myInt; x *= 2; instead
+//anyhow supporting this is a planned feature
 ```
