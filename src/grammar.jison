@@ -23,6 +23,7 @@
 "++"                     { return '++'; }
 "--"                     { return '--'; }
 
+":"                      { return ':'; }
 ";"                      { return ';'; }
 ","                      { return ','; }
 "("                      { return '('; }
@@ -31,14 +32,19 @@
 "}"                      { return '}'; }
 
 'function'               { return 'FUNCTION'; }
-'lib'                    { return 'LIB'; }
-'return'                 { return 'RETURN'; }
 
 'if'                     { return 'IF'; }
+'else'                   { return 'ELSE'; }
 
 'while'                  { return 'WHILE'; }
 'do'                     { return 'DO'; }
 'for'                    { return 'FOR'; }
+
+'bool'                   { return 'BOOL'; }
+'int'                    { return 'INT'; }
+'fixed'                  { return 'FIXED'; }
+'string'                 { return 'STRING_KEYWORD'; }
+'delegate'               { return 'DELEGATE'; }
 
 'true'                   { return 'TRUE'; }
 'false'                  { return 'FALSE'; }
@@ -46,14 +52,13 @@
 '-'?[0-9]+'.'[0-9]{0,2}  { return 'DECIMAL'; }
 '-'?[0-9]+               { return 'INTEGER'; }
 
-[a-zA-Z_][a-zA-Z_0-9]*   { return 'IDENTIFIER'; }
+[a-zA-Z_][a-zA-Z_.0-9]*  { return 'IDENTIFIER'; }
 
 '"'[^"]*'"'              { return 'STRING'; } //'
 
 <<EOF>>                  { return 'EOF'; }
 
 /lex
-
 
 %%
 
@@ -64,11 +69,19 @@ Program
 		{
 			return function()
 			{
+				var startFunc = outputHandler.current;
+				needsHelperCommands = [];
+
 				for(var i = 0; i < $1.length; i++)
 				{
 					if(typeof $1[i] != 'undefined')
 						$1[i]();
 				}
+
+				for(var i = 0; i < needsHelperCommands.length; i++)
+					outputHandler.addCallHelperCommands(needsHelperCommands[i]);
+
+				outputHandler.current = startFunc;
 			};
 		}
 	;
@@ -123,12 +136,18 @@ ComparationOperator
 
 
 
-Statement
+SingleStatement
 	: Block
-	| AssignStatement
-	| InlineVariable
-	| LibDefinition
-	| ReturnStatement
+	| AssignStatement ';'
+	| DefinitionStatement ';'
+	| InlineVariable ';'
+	;
+
+
+
+Statement
+	: SingleStatement
+	| FunctionDefinition
 	| IfStatement
 	| WhileStatement
 	| DoWhileStatement
@@ -137,35 +156,19 @@ Statement
 
 
 
-LibDefinition
-	: 'LIB' IDENTIFIER '(' ArgumentDefinitionList ')' Block
+
+FunctionDefinition
+	: 'FUNCTION' IDENTIFIER '(' ')' Block
 		{
-			$$ = undefined;
+			$$ = function() {};
+
 			functions[$2] = function()
 			{
-				for(var i = 0; i < arguments.length && i < $4.length; i++)
-					vars[$4[i]] = arguments[i];
+				Util.assert(arguments.length == 0, "The function {0} does not support parameter".format($2));
 
-				return $6();
-			}
+				$5();
+			};
 		}
-	;
-
-ReturnStatement
-	: 'RETURN' InlineVariable
-		{
-			$$ = function()
-			{
-				return $2();
-			}
-		}
-	;
-
-ArgumentDefinitionList
-	: ArgumentDefinitionList IDENTIFIER
-		{ $$ = $1.concat($2); }
-	|
-		{ $$ = []; }
 	;
 
 
@@ -192,9 +195,6 @@ FunctionCall
 				}
 				else
 				{
-					Util.assert(!typeMismatch(left, function() {}), "TypeError: {0} is not a function at line {1} column {2} to {3}"
-						.format(left, @2.first_line, @2.first_column, @2.last_column));
-
 					throw "TypeError: {0} is not a function at line {1} column {2} to {3}"
 						.format(left, @2.first_line, @2.first_column, @2.last_column);
 				}
@@ -223,7 +223,7 @@ InlineVariable
 	| 'STRING'
 		{ $$ = function() { return $1.substr(1, $1.length - 2); }; }
 	| IDENTIFIER
-		{ $$ = function() { checkUndefined($1, @1); return vars[$1] || functions[$1]; }; }
+		{ $$ = function() { checkUndefined($1, @1, true); return vars[$1] || functions[$1]; }; }
 	| 'FUNCTION' '(' ')' Block
 		{
 			$$ = function()
@@ -249,6 +249,47 @@ Boolean
 
 
 
+DefinitionStatement
+	: VariableType IDENTIFIER
+		{ $$ = function() { checkDefined($2, @2); vars[$2] = $1(undefined, $2); }; }
+	| VariableType IDENTIFIER '=' InlineVariable
+		{ $$ = function() { checkDefined($2, @2); vars[$2] = $1($4(), $2); }; }
+	;
+
+
+
+VariableType
+	: 'BOOL'
+		{ $$ = function(value, name) { return new Runtime.Boolean(value, name); }; }
+	| 'INT'
+		{ $$ = function(value, name) { return new Runtime.Integer(value, name); }; }
+	| 'FIXED'
+		{ $$ = function(value, name) { return new Runtime.Decimal(value, name); }; }
+	| 'STRING_KEYWORD'
+		{
+			$$ = function(value, name)
+			{
+				var val = new Runtime.String(name);
+				if(typeof value != 'undefined')
+					val.set(value);
+
+				return val;
+			};
+		}
+	| 'DELEGATE'
+		{
+			$$ = function(value, name)
+			{
+				var val = new Runtime.Callback();
+				if(typeof value != 'undefined')
+					val.add(value);
+
+				return val;
+			};
+		}
+	;
+
+
 AssignStatement
 	: IDENTIFIER AssignmentOperator InlineVariable
 		{
@@ -258,46 +299,7 @@ AssignStatement
 				if(typeof right == 'undefined')
 					return;
 
-				if(typeof vars[$1] == 'undefined')
-				{
-					if(right instanceof Runtime.Boolean || typeof right == 'boolean')
-						vars[$1] = new Runtime.Boolean(false, $1);
-					else if(right instanceof Runtime.Decimal || (typeof right == 'number' && ($3.decimal || Math.floor(right) != right)))
-						vars[$1] = new Runtime.Decimal(0, $1);
-					else if(right instanceof Runtime.Integer || typeof right == 'number')
-						vars[$1] = new Runtime.Integer(0, $1);
-					else if(typeof right == 'string')
-						vars[$1] = new Runtime.String($1);
-					else if(typeof right == 'function')
-						vars[$1] = new Runtime.Callback();
-					else if(typeof Runtime[right.constructor.name] == 'function')
-						vars[$1] = new Runtime[right.constructor.name]();
-					else
-						vars[$1] = right;
-				}
-				else if(typeof vars[$1] != 'object')
-				{
-					if(typeof vars[$1] == 'boolean')
-					{
-						vars[$1] = new Runtime.Boolean(vars[$1], $1);
-					}
-					else if(typeof vars[$1] == 'number')
-					{
-						vars[$1] = new Runtime.Integer(vars[$1], $1);
-					}
-					else if(typeof vars[$1] == 'string')
-					{
-						var val = vars[$1];
-						vars[$1] = new Runtime.String($1);
-						vars[$1].set(val);
-					}
-					else if(typeof vars[$1] == 'function')
-					{
-						var val = vars[$1];
-						vars[$1] = new Runtime.Callback();
-						vars[$1].set(val);
-					}
-				}
+				checkUndefined($1, @1);
 
 				Util.assert(!typeMismatch(vars[$1], right), "Type mismatch: cannot assign {0} to {1} at line {2} column {3} to {4}"
 					.format(right.constructor.name, vars[$1].constructor.name, @2.first_line, @2.first_column, @2.last_column));
@@ -379,9 +381,6 @@ ValidateExpression
 					var copy = left.clone();
 					copy.remove(right);
 
-					if(copy instanceof Runtime.Decimal)
-						max /= 100;
-
 					return $2(copy, 0, callback, right);
 				}
 				else
@@ -405,102 +404,98 @@ Block
 			$$ = function()
 			{
 				for(var i = 0; i < $2.length; i++)
-				{
-					var back = $2[i]();
-					if(typeof back != 'undefined')
-						return back;
-				}
+					$2[i]();
 			}
 		}
 	;
 
 IfStatement
-	: IF '(' ValidateExpression ')' Statement
+	: 'IF' '(' ValidateExpression ')' SingleStatement 'ELSE' SingleStatement
 		{
 			$$ = function()
 			{
-				$3($5);
+				var next = startNewFunction();
+				$3().validate(function()
+				{
+					$5();
+					call(next.func);
+				}, function()
+				{
+					$7();
+					call(next.func);
+				});
+				next.goNext();
+			}
+		}
+	| 'IF' '(' ValidateExpression ')' SingleStatement
+		{
+			$$ = function()
+			{
+				var next = startNewFunction();
+				$3().validate(function()
+				{
+					$5();
+					call(next.func);
+				}, next.func);
+				next.goNext();
 			};
 		}
 	;
 
 WhileStatement
-	: WHILE '(' ValidateExpression ')' Statement
+	: 'WHILE' '(' ValidateExpression ')' SingleStatement
 		{
 			$$ = function()
 			{
+				var next = startNewFunction();
 				var repeat = function()
 				{
 					$5();
-					$3(repeat);
+					$3().validate(repeat, next.func);
 				}
-				$3(repeat);
+				$3().validate(repeat, next.func);
+				next.goNext();
 			};
 		}
 	;
 
 DoWhileStatement
-	: DO Statement WHILE '(' ValidateExpression ')' ';'
+	: 'DO' SingleStatement 'WHILE' '(' ValidateExpression ')'
 		{
-			var repeat = function()
+			$$ = function()
 			{
-				$5();
-				$3(repeat);
+				var next = startNewFunction();
+				var repeat = function()
+				{
+					$2();
+					$3().validate(repeat, next.func);
+				}
+				call(repeat);
+				next.goNext();
 			}
-			call(repeat);
 		}
 	;
 
 ForStatement
-	: FOR '(' AssignStatement ';' ValidateExpression ';' AssignStatement ')' Statement
+	: 'FOR' '(' DefinitionStatement ';' ValidateExpression ';' AssignStatement ')' SingleStatement
 		{
 			$$ = function()
 			{
+				var next = startNewFunction();
 				$3();
 				var repeat = function()
 				{
 					$9();
 					$7();
-					$5(repeat);
+					$5().validate(repeat, next.func);
 				}
-				$5(repeat);
+				$5().validate(repeat, next.func);
+				next.goNext();
 			};
 		}
 	;
 
 %%
-
-function checkOperator(obj, member, operator, line)
-{
-	var type = obj.constructor.name;
-
-	Util.assert(typeof obj[member] != 'undefined', "Object of type '" + type + "' does not support operator '" + operator + "' at line " + line.first_line);
-}
-
-function checkUndefined(name, line)
-{
-	Util.assert(vars[name] || functions[name], "Unknown identifier '"+name+"' at line "+line.first_line+" column "+line.first_column+" to "+line.last_column);
-}
-
-function typeMismatch(left, right)
-{
-	if(left.constructor == right.constructor)
-		return false;
-	else if(left instanceof Runtime.Boolean && typeof right == 'boolean')
-		return false;
-	else if(left instanceof Runtime.Integer && typeof right == 'number')
-		return false;
-	else if(left instanceof Runtime.Decimal && typeof right == 'number')
-		return false;
-	else if(left instanceof Runtime.String && typeof right == 'string')
-		return false;
-	else if(left instanceof Runtime.Callback && typeof right == 'function')
-		return false
-	else
-		return true;
-}
-
-var functions = {};
 
 //assign api functions to vars
 for(var name in cplApi)

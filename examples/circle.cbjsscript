@@ -1,16 +1,17 @@
-pi = pi();
-radius = 1.0;
+fixed pi = math.pi();
+fixed circumference = 0.0;
+fixed area = 0.0;
 
-while(radius <= 20)
+tellraw("§cCircle circumference and area for radius 1 to 19§r");
+for(fixed i = 1.0; i <= 19; i++)
 {
-	circumference = radius;
-	circumference *= 2;
-	circumference *= pi;
+	circumference = i;
+	circumference *= 2.0;
+	circumference += pi;
 
-	area = radius;
+	area = i;
 	area *= area;
-	area *= pi;
+	area += pi;
 
-	tellraw("r = ", radius, " C = ", circumference, " A = ", area);
-	radius += 1;
+	tellraw("r = ", i, " C = ", circumference, " A = ", area);
 }

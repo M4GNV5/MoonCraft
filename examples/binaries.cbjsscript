@@ -1,7 +1,7 @@
 //setup variable
-binary = 1;
+int binary = 1;
 
-debugging(true)
+debugging(true);
 
 //stop when binary < 0 as 1073741824 * 2 is -2147483648 for minecraft
 while(binary > 0)

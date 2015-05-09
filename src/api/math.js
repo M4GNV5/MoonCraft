@@ -1,5 +1,6 @@
+//random
 var lastRandom;
-cplApi.random = function()
+cplApi["math.random"] = function()
 {
 	if(typeof lastRandom == 'undefined')
 	{
@@ -15,29 +16,28 @@ cplApi.random = function()
 
 	return lastRandom;
 }
-cplApi.randomSeed = function(value)
+cplApi["math.randomSeed"] = function(value)
 {
+	if(typeof lastRandom == 'undefined')
+	{
+		callOnce(function()
+		{
+			lastRandom = new Runtime.Integer(1, "randomSeed");
+		});
+	}
+
 	if(typeof value != 'undefined')
 		lastRandom.set(value);
 
 	return lastRandom;
 }
 
-cplApi.intMax = function()
-{
-	return Math.pow(2, 31) - 1;
-}
-cplApi.intMin = function()
-{
-	return -Math.pow(2, 31);
-}
-
-cplApi.pi = function()
+//constants
+cplApi["math.pi"] = function()
 {
     return 3.14;
 }
-
-cplApi.euler = function()
+cplApi["math.euler"] = function()
 {
     return 2.72;
 }

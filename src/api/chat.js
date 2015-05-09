@@ -1,6 +1,3 @@
-var cplApi = cplApi || {};
-var vars =  vars || {};
-
 cplApi.log = function(message)
 {
     api.log(message.toString());
