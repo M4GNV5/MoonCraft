@@ -1,9 +1,9 @@
-rnd = 5;
-searching = true;
+int rnd = 5;
+bool searching = true;
 
 while(searching)
 {
-	rnd = random();
+	rnd = math.random();
 	out(rnd);
 	
 	if(rnd == 42)

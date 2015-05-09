@@ -7,11 +7,11 @@ for(fixed i = 1.0; i <= 19; i++)
 {
 	circumference = i;
 	circumference *= 2.0;
-	circumference += pi;
+	circumference *= pi;
 
 	area = i;
 	area *= area;
-	area += pi;
+	area *= pi;
 
 	tellraw("r = ", i, " C = ", circumference, " A = ", area);
 }
