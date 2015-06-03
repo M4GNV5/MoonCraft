@@ -31,7 +31,9 @@ cplApi.tellraw = function()
     {
         var obj = vars[arguments[i]] || arguments[i];
 
-        if(useExactTellraw && typeof obj.toExactTellrawExtra != 'undefined')
+        if(obj instanceof Entities.Selector)
+            t.extra.push(new Chat.TellrawSelectorExtra(obj));
+        else if(useExactTellraw && typeof obj.toExactTellrawExtra != 'undefined')
             t.extra = t.extra.concat(obj.toExactTellrawExtra());
         else if(typeof obj.toTellrawExtra != 'undefined')
             t.extra.push(obj.toTellrawExtra());

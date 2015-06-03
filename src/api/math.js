@@ -1,6 +1,8 @@
 //random
+cplApi.math = {};
+
 var lastRandom;
-cplApi["math.random"] = function()
+cplApi.math.random = function()
 {
 	if(typeof lastRandom == 'undefined')
 	{
@@ -16,7 +18,7 @@ cplApi["math.random"] = function()
 
 	return lastRandom;
 }
-cplApi["math.randomSeed"] = function(value)
+cplApi.math.randomSeed = function(value)
 {
 	if(typeof lastRandom == 'undefined')
 	{
@@ -33,11 +35,11 @@ cplApi["math.randomSeed"] = function(value)
 }
 
 //constants
-cplApi["math.pi"] = function()
+cplApi.math.pi = function()
 {
     return 3.14;
 }
-cplApi["math.euler"] = function()
+cplApi.math.euler = function()
 {
     return 2.72;
 }

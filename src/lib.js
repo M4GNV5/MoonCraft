@@ -26,13 +26,13 @@ function checkDefined(name, line)
 
 function typeMismatch(left, right)
 {
+	var numberTypes = [Runtime.Integer, Runtime.Decimal, Scoreboard.Score, (0).constructor];
+
 	if(left.constructor == right.constructor)
 		return false;
 	else if(left instanceof Runtime.Boolean && typeof right == 'boolean')
 		return false;
-	else if(left instanceof Runtime.Integer && typeof right == 'number')
-		return false;
-	else if(left instanceof Runtime.Decimal && typeof right == 'number')
+	else if(numberTypes.indexOf(left.constructor) !== -1 && numberTypes.indexOf(right.constructor) !== -1)
 		return false;
 	else if(left instanceof Runtime.String && typeof right == 'string')
 		return false;

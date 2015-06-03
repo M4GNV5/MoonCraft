@@ -23,7 +23,7 @@
 "++"                     { return '++'; }
 "--"                     { return '--'; }
 
-":"                      { return ':'; }
+"."                      { return '.'; }
 ";"                      { return ';'; }
 ","                      { return ','; }
 "("                      { return '('; }
@@ -40,11 +40,14 @@
 'do'                     { return 'DO'; }
 'for'                    { return 'FOR'; }
 
-'bool'                   { return 'BOOL'; }
-'int'                    { return 'INT'; }
-'fixed'                  { return 'FIXED'; }
+'new'                    { return 'NEW'; }
+
+'bool'                   { return 'BOOL_KEYWORD'; }
+'int'                    { return 'INT_KEYWORD'; }
+'fixed'                  { return 'FIXED_KEYWORD'; }
 'string'                 { return 'STRING_KEYWORD'; }
-'delegate'               { return 'DELEGATE'; }
+'delegate'               { return 'DELEGATE_KEYWORD'; }
+'object'                 { return 'OBJECT_KEYWORD'; }
 
 'true'                   { return 'TRUE'; }
 'false'                  { return 'FALSE'; }
@@ -52,7 +55,9 @@
 '-'?[0-9]+'.'[0-9]{0,2}  { return 'DECIMAL'; }
 '-'?[0-9]+               { return 'INTEGER'; }
 
-[a-zA-Z_][a-zA-Z_.0-9]*  { return 'IDENTIFIER'; }
+'@'[prae]'['[a-zA-Z0-9,=!]+']' { return 'SELECTOR' }
+
+[a-zA-Z_][a-zA-Z_0-9]*  { return 'IDENTIFIER'; }
 
 '"'[^"]*'"'              { return 'STRING'; } //'
 
@@ -158,17 +163,42 @@ Statement
 
 
 FunctionDefinition
-	: 'FUNCTION' IDENTIFIER '(' ')' Block
+	: 'FUNCTION' 'IDENTIFIER' '(' ParameterDefinitionList ')' Block
 		{
 			$$ = function() {};
 
 			functions[$2] = function()
 			{
-				Util.assert(arguments.length == 0, "The function {0} does not support parameter".format($2));
+				Util.assert($4.length == arguments.length, "Invalid call signature: function {0} requries {1} arguments not {2}"
+					.format($2, $4.length, arguments.length));
 
-				$5();
+				for(var i = 0; i < $4.length; i++)
+				{
+					var ctor = $4[i].ctor;
+					var name = $4[i].name;
+					
+					Util.assert(!typeMismatch(ctor.defaultValue, arguments[i]), "Type mismatch: function {0} requires argument {1} to be of type {2} not {3}"
+						.format($2, name, ctor.defaultValue.constructor.name, arguments[i].constructor.name));
+
+					if(typeof arguments[i] == 'object')
+						vars[name] = arguments[i];
+					else
+						vars[name] = ctor(arguments[i], name);
+				}
+
+
+				$6();
 			};
 		}
+	;
+
+ParameterDefinitionList
+	: ParameterDefinitionList ',' VariableType 'IDENTIFIER'
+		{ $$ = $1.concat({ctor: $3, name: $4}); }
+	| VariableType 'IDENTIFIER'
+		{ $$ = [{ctor: $1, name: $2}]; }
+	|
+		{ $$ = []; }
 	;
 
 
@@ -191,7 +221,7 @@ FunctionCall
 					for(var i = 0; i < $3.length; i++)
 						args[i] = $3[i]();
 
-					return left.apply(undefined, args);
+					return left.apply(left.parent, args);
 				}
 				else
 				{
@@ -222,7 +252,7 @@ InlineVariable
 		{ $$ = function() { return parseFloat($1); }; $$.decimal = true; }
 	| 'STRING'
 		{ $$ = function() { return $1.substr(1, $1.length - 2); }; }
-	| IDENTIFIER
+	| 'IDENTIFIER'
 		{ $$ = function() { checkUndefined($1, @1, true); return vars[$1] || functions[$1]; }; }
 	| 'FUNCTION' '(' ')' Block
 		{
@@ -234,8 +264,51 @@ InlineVariable
 				};
 			}
 		}
+	| 'SELECTOR'
+		{ $$ = function() { return Entities.Selector.parse($1); } }
 	| FunctionCall
 		{ $$ = $1; }
+	| InlineVariable '.' 'IDENTIFIER'
+		{
+			$$ = function()
+			{
+				var parent = $1();
+				if(typeof parent[$3] == 'undefined')
+					throw "Cannot read property {0} at line {1} column {2} to {3}"
+						.format($3, @3.first_line, @3.first_column, @3.last_column);
+
+				var child = $1()[$3];
+				child.parent = parent;
+
+				return child;
+			};
+		}
+	| 'NEW' InlineVariable '(' ParameterList ')'
+		{
+			$$ = function()
+			{
+				Util.assert(typeof $2 == 'function', "Cannot create instance of {0} at line {1} column {2} to {3}"
+					.format($2.toString(), @2.first_line, @2.first_column, @2.last_column));
+
+				var ctor = $2();
+
+				var args = [];
+				for(var i = 0; i < $4.length; i++)
+					args[i] = $4[i]();
+
+				function construct(constructor, ctorArgs)
+				{
+				    function _ctor()
+				    {
+				        return constructor.apply(this, ctorArgs);
+				    }
+				    _ctor.prototype = constructor.prototype;
+				    return new _ctor();
+				}
+
+				return construct(ctor, $4);
+			}
+		}
 	;
 
 
@@ -250,21 +323,21 @@ Boolean
 
 
 DefinitionStatement
-	: VariableType IDENTIFIER
+	: VariableType 'IDENTIFIER'
 		{ $$ = function() { checkDefined($2, @2); vars[$2] = $1(undefined, $2); }; }
-	| VariableType IDENTIFIER '=' InlineVariable
+	| VariableType 'IDENTIFIER' '=' InlineVariable
 		{ $$ = function() { checkDefined($2, @2); vars[$2] = $1($4(), $2); }; }
 	;
 
 
 
 VariableType
-	: 'BOOL'
-		{ $$ = function(value, name) { return new Runtime.Boolean(value, name); }; }
-	| 'INT'
-		{ $$ = function(value, name) { return new Runtime.Integer(value, name); }; }
-	| 'FIXED'
-		{ $$ = function(value, name) { return new Runtime.Decimal(value, name); }; }
+	: 'BOOL_KEYWORD'
+		{ $$ = function(value, name) { return new Runtime.Boolean(value, name); }; $$.defaultValue = false; }
+	| 'INT_KEYWORD'
+		{ $$ = function(value, name) { return new Runtime.Integer(value, name); }; $$.defaultValue = 0; }
+	| 'FIXED_KEYWORD'
+		{ $$ = function(value, name) { return new Runtime.Decimal(value, name); }; $$.defaultValue = 0.0; }
 	| 'STRING_KEYWORD'
 		{
 			$$ = function(value, name)
@@ -275,8 +348,9 @@ VariableType
 
 				return val;
 			};
+			$$.defaultValue = "";
 		}
-	| 'DELEGATE'
+	| 'DELEGATE_KEYWORD'
 		{
 			$$ = function(value, name)
 			{
@@ -286,12 +360,24 @@ VariableType
 
 				return val;
 			};
+			$$.defaultValue = function() {};
+		}
+	| 'OBJECT_KEYWORD'
+		{
+			$$ = function(value, name)
+			{
+				if(typeof value == 'undefined')
+					throw "object needs intialization value at line {0} colums {1} to {2}".format(@1.first_line, @1.first_column, @1.last_column);
+				else
+					return value;
+			};
+			$$.defaultValue = {};
 		}
 	;
 
 
 AssignStatement
-	: IDENTIFIER AssignmentOperator InlineVariable
+	: 'IDENTIFIER' AssignmentOperator InlineVariable
 		{
 			$$ = function()
 			{
@@ -308,7 +394,7 @@ AssignStatement
 				$2(vars[$1], right);
 			};
 		}
-	| IDENTIFIER SingleAssignmentOperator
+	| 'IDENTIFIER' SingleAssignmentOperator
 		{
 			$$ = function()
 			{

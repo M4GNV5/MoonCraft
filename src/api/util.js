@@ -17,7 +17,7 @@ cplApi.async = function(func)
     else if(typeof func == 'function')
         call(func);
     else
-        throw "Invalid setTimeout callback '{0}'".format(callback);
+        throw "Invalid async callback '{0}'".format(callback);
 }
 
 cplApi.command = function()
