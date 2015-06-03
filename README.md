@@ -38,6 +38,17 @@ delegate myDelegate = function()
 {
 	//...
 };
+function myFunction(int intArg, string stringArg)
+{
+	//...
+}
+
+//we also have the object keyword for not-base types like selectors
+object nearPlayers = @a[r=10];
+//but also for using all parts of the CommandblocksJS api
+object coins = objective("coins", "dummy");
+object notchsCoins = score(coins, @p[name=Notch]);
+display.sidebar(coins);
 ```
 ###Statements
 ```javascript
@@ -60,28 +71,42 @@ while(myBool)
 		out(myDecimal);
 	}
 }
+do
+{
+	notchsCoins += 25; //someone just bought minecraft
+} while(notchsCoins < 666);
 ```
 ###Built-in Functions
 ```javascript
 //chat
-tellraw(args...); // tellraw @a args
-out(variable); // shorthand to tellraw("Output: ", variable);
-debugging(true|false); // show integer values in the scoreboard sidebar
+tellraw(any args...); // tellraw @a args
+out(any variable); // shorthand to tellraw("Output: ", variable);
+debugging(bool enabled); // show integer values in the scoreboard sidebar
 
 //util
-setTimeout(callback, time); // calls callback async after time milliseconds
-async(callback); //calls callback async
-command(text); //places a commandblock with text as command
+setTimeout(function|delegate callback, int time); // calls callback async after time milliseconds
+async(function|delegate callback); //calls callback async
+command(string text); //places a commandblock with text as command
 
 //math
 math.random(); // returns a random number
-math.randomSeed(seed); //sets the seed for the next random number to seed
+math.randomSeed(int seed); //sets the seed for the next random number to seed
 math.pi(); // returns 3.14
 math.euler(); // returns 2.72
+
+//scoreboard
+objective(string name, string type, string displayName); //creates an objective
+score(object|string objective, object selector); //gets a single score for use with variables
+display.belowName(object objective); //displays objective in displayslot belowName
+display.sidebar(object objective); //displays objective in displayslot sidebar
+display.list(object objective); //displays objective in displayslot list
 ```
 ###Specialities
 ```javascript
 myDelegate("foo"); // wont work - cant give arguments to delegates
+myFunction(42, "hello world"); //can give arguments to functions
+//note: functions are only for code reuse not for commandblock reuse
+//so every function call will build the function delegates are only built once
 
 x = 2 * myInt; // wont work use x = myInt; x *= 2; instead
 //anyhow supporting this is a planned feature
