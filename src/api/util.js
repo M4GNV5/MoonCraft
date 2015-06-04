@@ -20,6 +20,16 @@ cplApi.async = function(func)
         throw "Invalid async callback '{0}'".format(callback);
 }
 
+cplApi.asyncOnce = function(func)
+{
+    if(func instanceof Runtime.Callback)
+        throw "delegates cannot be called once!"
+    else if(typeof func == 'function')
+        callOnce(func);
+    else
+        throw "Invalid asyncOnce callback '{0}'".format(callback);
+}
+
 cplApi.command = function()
 {
 	var cmd = "";
@@ -27,4 +37,9 @@ cplApi.command = function()
 		cmd += arguments[i].toString();
 
 	command(cmd);
+}
+
+cplApi.log = function(msg)
+{
+    api.log(msg.toString());
 }

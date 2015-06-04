@@ -55,9 +55,9 @@
 '-'?[0-9]+'.'[0-9]{0,2}  { return 'DECIMAL'; }
 '-'?[0-9]+               { return 'INTEGER'; }
 
-'@'[prae]'['[a-zA-Z0-9,=!]+']' { return 'SELECTOR' }
+'@'[prae]('['[a-zA-Z0-9,=!]*']')? { return 'SELECTOR' }
 
-[a-zA-Z_][a-zA-Z_0-9]*  { return 'IDENTIFIER'; }
+[a-zA-Z_][a-zA-Z_0-9]*   { return 'IDENTIFIER'; }
 
 '"'[^"]*'"'              { return 'STRING'; } //'
 
@@ -282,32 +282,6 @@ InlineVariable
 
 				return child;
 			};
-		}
-	| 'NEW' InlineVariable '(' ParameterList ')'
-		{
-			$$ = function()
-			{
-				Util.assert(typeof $2 == 'function', "Cannot create instance of {0} at line {1} column {2} to {3}"
-					.format($2.toString(), @2.first_line, @2.first_column, @2.last_column));
-
-				var ctor = $2();
-
-				var args = [];
-				for(var i = 0; i < $4.length; i++)
-					args[i] = $4[i]();
-
-				function construct(constructor, ctorArgs)
-				{
-				    function _ctor()
-				    {
-				        return constructor.apply(this, ctorArgs);
-				    }
-				    _ctor.prototype = constructor.prototype;
-				    return new _ctor();
-				}
-
-				return construct(ctor, $4);
-			}
 		}
 	;
 
