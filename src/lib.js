@@ -38,7 +38,7 @@ function typeMismatch(left, right)
 	else if(left instanceof Runtime.String && typeof right == 'string')
 		return false;
 	else if(left instanceof Runtime.Callback && typeof right == 'function')
-		return false
+		return false;
 	else if(left instanceof StaticVariable)
 		return false;
 	else
