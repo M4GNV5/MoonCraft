@@ -12,6 +12,16 @@ cplApi.util.setTimeout = function(callback, time)
         throw "Invalid setTimeout callback '{0}'".format(callback);
 }
 
+cplApi.util.callAsync = function(func)
+{
+    if(func instanceof Runtime.Callback)
+        func.emit();
+    else if(typeof func == 'function')
+        call(func);
+    else
+        throw "Invalid async callback '{0}'".format(callback);
+}
+
 cplApi.util.asyncOnce = function(func)
 {
     if(func instanceof Runtime.Callback)
