@@ -33,14 +33,15 @@
 
 'function'               { return 'FUNCTION'; }
 
+'static'                 { return 'STATIC_KEYWORD'; }
+'async'                  { return 'ASYNC_KEYWORD'; }
+
 'if'                     { return 'IF'; }
 'else'                   { return 'ELSE'; }
 
 'while'                  { return 'WHILE'; }
 'do'                     { return 'DO'; }
 'for'                    { return 'FOR'; }
-
-'new'                    { return 'NEW'; }
 
 'bool'                   { return 'BOOL_KEYWORD'; }
 'int'                    { return 'INT_KEYWORD'; }
@@ -59,7 +60,7 @@
 
 [a-zA-Z_][a-zA-Z_0-9]*   { return 'IDENTIFIER'; }
 
-'"'[^"]*'"'              { return 'STRING'; } //'
+\"((\\\")|[^\"])*\"      { return 'STRING'; } //"
 
 <<EOF>>                  { return 'EOF'; }
 
@@ -105,6 +106,20 @@ StatementSeperator
 
 
 
+ModifierList
+	: ModifierList Modifier
+		{ $$ = $1.concat($2); }
+	|
+		{ $$ = []; }
+	;
+
+Modifier
+	: 'ASYNC_KEYWORD'
+	| 'STATIC_KEYWORD'
+	;
+
+
+
 AssignmentOperator
 	: "="
 		{ $$ = function(left, right) { checkOperator(left, "set", "=", @1); left.set(right); } }
@@ -146,6 +161,7 @@ SingleStatement
 	| AssignStatement ';'
 	| DefinitionStatement ';'
 	| InlineVariable ';'
+	| AsyncFunctionCall ';'
 	;
 
 
@@ -251,7 +267,7 @@ InlineVariable
 	| 'DECIMAL'
 		{ $$ = function() { return parseFloat($1); }; $$.decimal = true; }
 	| 'STRING'
-		{ $$ = function() { return $1.substr(1, $1.length - 2); }; }
+		{ $$ = function() { return $1.substr(1, $1.length - 2).replace(/\\\"/g, "\""); }; }
 	| 'IDENTIFIER'
 		{ $$ = function() { checkUndefined($1, @1, true); return vars[$1] || functions[$1]; }; }
 	| 'FUNCTION' '(' ')' Block
@@ -297,10 +313,39 @@ Boolean
 
 
 DefinitionStatement
-	: VariableType 'IDENTIFIER'
-		{ $$ = function() { checkDefined($2, @2); vars[$2] = $1(undefined, $2); }; }
-	| VariableType 'IDENTIFIER' '=' InlineVariable
-		{ $$ = function() { checkDefined($2, @2); vars[$2] = $1($4(), $2); }; }
+	: ModifierList VariableType 'IDENTIFIER'
+		{
+			checkModifiers($1, ["static"], "variable definitions", @1);
+			$$ = function()
+			{
+				if($1.indexOf("static") === -1)
+				{
+					checkDefined($3, @3);
+					vars[$3] = $2(undefined, $3);
+				}
+				else
+				{
+					vars[$3] = new StaticVariable();
+				}
+				
+			};
+		}
+	| ModifierList VariableType 'IDENTIFIER' '=' InlineVariable
+		{
+			checkModifiers($1, ["static"], "variable definitions", @1);
+			$$ = function()
+			{
+				if($1.indexOf("static") === -1)
+				{
+					checkDefined($3, @3);
+					vars[$3] = $2($5(), $3);
+				}
+				else
+				{
+					vars[$3] = new StaticVariable($5());
+				}
+			};
+		}
 	;
 
 
@@ -351,13 +396,11 @@ VariableType
 
 
 AssignStatement
-	: 'IDENTIFIER' AssignmentOperator InlineVariable
+	: InlineVariable AssignmentOperator InlineVariable
 		{
 			$$ = function()
 			{
 				var right = $3();
-				if(typeof right == 'undefined')
-					return;
 
 				checkUndefined($1, @1);
 
@@ -375,7 +418,7 @@ AssignStatement
 				checkUndefined($1, @1);
 
 				$2(vars[$1]);
-			}
+			};
 		}
 	;
 
@@ -387,6 +430,11 @@ ValidateExpression
 			$$ = function(callback)
 			{
 				var left = $1();
+
+				if(typeof left == 'string')
+				{
+					return new MinecraftCommand(left);
+				}
 
 				Util.assert(!typeMismatch(left, true), "Type mismatch: cannot compare {0} and {1} at line {2} column {3} to {4}"
 					.format("boolean", left.constructor.name, @1.first_line, @1.first_column, @1.last_column));
@@ -470,95 +518,60 @@ Block
 	;
 
 IfStatement
-	: 'IF' '(' ValidateExpression ')' SingleStatement 'ELSE' SingleStatement
+	: ModifierList 'IF' '(' ValidateExpression ')' SingleStatement 'ELSE' SingleStatement
 		{
+			checkModifiers($1, ["async", "static"], "if statements", @1);
 			$$ = function()
 			{
-				var next = startNewFunction();
-				$3().validate(function()
-				{
-					$5();
-					call(next.func);
-				}, function()
-				{
-					$7();
-					call(next.func);
-				});
-				next.goNext();
+				var stmt = new ifElseStatement($4, $6, $8);
+				runModifiedStatement(stmt, $1);
 			}
 		}
-	| 'IF' '(' ValidateExpression ')' SingleStatement
+	| ModifierList 'IF' '(' ValidateExpression ')' SingleStatement
 		{
+			checkModifiers($1, ["async", "static"], "if statements", @1);
 			$$ = function()
 			{
-				var next = startNewFunction();
-				$3().validate(function()
-				{
-					$5();
-					call(next.func);
-				}, next.func);
-				next.goNext();
+				var stmt = new ifStatement($4, $6);
+				runModifiedStatement(stmt, $1);
 			};
 		}
 	;
 
 WhileStatement
-	: 'WHILE' '(' ValidateExpression ')' SingleStatement
+	: ModifierList 'WHILE' '(' ValidateExpression ')' SingleStatement
 		{
+			checkModifiers($1, ["async", "static"], "while loops", @1);
 			$$ = function()
 			{
-				var next = startNewFunction();
-				var repeat = function()
-				{
-					$5();
-					$3().validate(repeat, next.func);
-				}
-				$3().validate(repeat, next.func);
-				next.goNext();
+				var stmt = new whileStatement($4, $6, true);
+				runModifiedStatement(stmt, $1);
 			};
 		}
 	;
 
 DoWhileStatement
-	: 'DO' SingleStatement 'WHILE' '(' ValidateExpression ')'
+	: ModifierList 'DO' SingleStatement 'WHILE' '(' ValidateExpression ')'
 		{
+			checkModifiers($1, ["async", "static"], "do-while loops", @1);
 			$$ = function()
 			{
-				var next = startNewFunction();
-				var repeat = function()
-				{
-					$2();
-					$3().validate(repeat, next.func);
-				}
-				call(repeat);
-				next.goNext();
+				var stmt = new whileStatement($6, $3, false);
+				runModifiedStatement(stmt, $1);
 			}
 		}
 	;
 
 ForStatement
-	: 'FOR' '(' DefinitionStatement ';' ValidateExpression ';' AssignStatement ')' SingleStatement
+	: ModifierList 'FOR' '(' DefinitionStatement ';' ValidateExpression ';' AssignStatement ')' SingleStatement
 		{
+			checkModifiers($1, ["async", "static"], "for loops", @1);
 			$$ = function()
 			{
-				var next = startNewFunction();
-				$3();
-				var repeat = function()
-				{
-					$9();
-					$7();
-					$5().validate(repeat, next.func);
-				}
-				$5().validate(repeat, next.func);
-				next.goNext();
+				var stmt = new forStatement($4, $6, $8, $10);
+				runModifiedStatement(stmt, $1);
 			};
 		}
 	;
 
 %%
-
-//assign api functions to vars
-for(var name in cplApi)
-{
-	functions[name] = cplApi[name];
-}

@@ -1,3 +1,5 @@
+cplApi.scoreboard = ["objective", "score", "display", "team"];
+
 cplApi.objective = function(name, type, displayName)
 {
 	type = type || "dummy";

@@ -5,23 +5,23 @@ cplApi.Players = Players;
 cplApi.Runtime = Runtime;
 cplApi.Scoreboard = Scoreboard;
 cplApi.Util = Util;
+cplApi.MinecraftCommand = MinecraftCommand;
 
 cplApi.construct = function()
 {
+	var other = arguments[0];
+	if(other instanceof StaticVariable)
+		other = other.value;
+
 	var args = [];
 	for(var i = 1; i < arguments.length; i++)
 		args.push(arguments[i]);
 
-	function _construct(constructor, ctorArgs)
+	function ctor()
 	{
-	    function ctor()
-	    {
-	        return constructor.apply(this, ctorArgs);
-	    }
-	    ctor.prototype = constructor.prototype;
-
-	    return new ctor();
+		return other.apply(this, args);
 	}
+	ctor.prototype = other.prototype;
 
-	return _construct(arguments[0], args);
+	return new ctor();
 }

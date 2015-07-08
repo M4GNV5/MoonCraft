@@ -1,9 +1,11 @@
-cplApi.out = function(variable)
+cplApi.chat = {};
+
+cplApi.chat.out = function(variable)
 {
-    cplApi.tellraw("Output: ", variable);
+    cplApi.chat.tellraw("Output: ", variable);
 };
 
-cplApi.generateTellraw = function()
+cplApi.chat.generateTellraw = function()
 {
     var t = new Chat.Tellraw();
 
@@ -26,30 +28,29 @@ cplApi.generateTellraw = function()
     return t;
 };
 var useExactTellraw = true;
-cplApi.exactTellraw = function(enable)
+cplApi.chat.exactTellraw = function(enable)
 {
     useExactTellraw = enable === false ? false : true;
 };
 
-cplApi.tellraw = function()
+cplApi.chat.tellraw = function()
 {
-    var t = cplApi.generateTellraw.apply(cplApi, arguments);
+    var t = cplApi.chat.generateTellraw.apply(cplApi.chat, arguments);
 
     t.tell(new Entities.Player("@a"));
 };
 
-cplApi.tellrawTo = function()
+cplApi.chat.tellrawTo = function()
 {
     var args = [];
     for(var i = 1; i < arguments.length; i++)
         args.push(arguments[i]);
 
-    var t = cplApi.generateTellraw.apply(cplApi, args);
+    var t = cplApi.chat.generateTellraw.apply(cplApi.chat, args);
 
     t.tell(arguments[0]);
 };
 
-cplApi.chat = {};
 cplApi.chat.message = function(text, color, clickEvent, hoverEvent, bold, italic, obfuscated, underlined, strikethrough)
 {
     return new Chat.Message(text, Chat.Color[color] || undefined, bold ,italic, obfuscated, underlined, strikethrough, clickEvent, hoverEvent);

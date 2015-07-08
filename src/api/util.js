@@ -1,4 +1,6 @@
-cplApi.setTimeout = function(callback, time)
+cplApi.util = {};
+
+cplApi.util.setTimeout = function(callback, time)
 {
 	time = parseInt(time);
 
@@ -10,17 +12,7 @@ cplApi.setTimeout = function(callback, time)
         throw "Invalid setTimeout callback '{0}'".format(callback);
 }
 
-cplApi.async = function(func)
-{
-    if(func instanceof Runtime.Callback)
-        func.emit();
-    else if(typeof func == 'function')
-        call(func);
-    else
-        throw "Invalid async callback '{0}'".format(callback);
-}
-
-cplApi.asyncOnce = function(func)
+cplApi.util.asyncOnce = function(func)
 {
     if(func instanceof Runtime.Callback)
         throw "delegates cannot be called once!"
@@ -30,7 +22,7 @@ cplApi.asyncOnce = function(func)
         throw "Invalid asyncOnce callback '{0}'".format(callback);
 }
 
-cplApi.command = function()
+cplApi.util.command = function()
 {
 	var cmd = "";
 	for(var i = 0; i < arguments.length; i++)
@@ -39,7 +31,7 @@ cplApi.command = function()
 	command(cmd);
 }
 
-cplApi.log = function(msg)
+cplApi.util.log = function(msg)
 {
     api.log(msg.toString());
 }

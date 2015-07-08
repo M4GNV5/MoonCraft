@@ -1,6 +1,7 @@
 var cplApi = cplApi || {};
 var vars =  vars || {};
 var functions = functions || {};
+var ctors = ctors || {};
 
 function checkOperator(obj, member, operator, line)
 {
@@ -38,8 +39,38 @@ function typeMismatch(left, right)
 		return false;
 	else if(left instanceof Runtime.Callback && typeof right == 'function')
 		return false
+	else if(left instanceof StaticVariable)
+		return false;
 	else
 		return true;
+}
+
+function checkModifiers(modifier, allowed, label, line)
+{
+	for(var i = 0; i < modifier.length; i++)
+	{
+		if(allowed.indexOf(modifier[i]) === -1)
+			throw "Modifier {0} is not allowed for {1} in line {2} column {3} to {4}".format(modifier[i], label, line.first_line, line.first_column, line.last_column);
+	}
+}
+
+function runModifiedStatement(stmt, modifier)
+{
+	var mode;
+	if(modifier.length > 0)
+	{
+		mode = "";
+		for(var i = 0; i < modifier.length; i++)
+		{
+			mode += modifier[i];
+		}
+	}
+	else
+	{
+		mode = "default";
+	}
+
+	stmt[mode]();
 }
 
 var needsHelperCommands = [];
