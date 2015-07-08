@@ -78,15 +78,19 @@ do
 ```
 ###Built-in Functions
 ```javascript
+//dependiency management
+import(string dependency); //e.g. import("chat"); allows access to the chat api
+require(string dependency); //returns the dependency instead of making it accesibly
+
 //chat
-tellraw(any args...); // tellraw @a args
-out(any variable); // shorthand to tellraw("Output: ", variable);
-debugging(bool enabled); // show integer values in the scoreboard sidebar
+chat.tellraw(any args...); // tellraw @a args
+chat.out(any variable); // shorthand to tellraw("Output: ", variable);
+chat.debugging(bool enabled); // show integer values in the scoreboard sidebar
 
 //util
-setTimeout(function|delegate callback, int time); // calls callback async after time milliseconds
-async(function|delegate callback); //calls callback async
-command(string text); //places a commandblock with text as command
+util.setTimeout(function|delegate callback, int time); // calls callback async after time milliseconds
+util.callAsync(function|delegate callback); //calls callback async
+util.command(string text); //places a commandblock with text as command
 
 //math
 math.random(); // returns a random number
@@ -95,11 +99,11 @@ math.pi(); // returns 3.14
 math.euler(); // returns 2.72
 
 //scoreboard
-objective(string name, string type, string displayName); //creates an objective
-score(object|string objective, object selector); //gets a single score for use with variables
-display.belowName(object objective); //displays objective in displayslot belowName
-display.sidebar(object objective); //displays objective in displayslot sidebar
-display.list(object objective); //displays objective in displayslot list
+scoreboard.objective(string name, string type, string displayName); //creates an objective
+scoreboard.score(object|string objective, object selector); //gets a single score for use with variables
+scoreboard.display.belowName(object objective); //displays objective in displayslot belowName
+scoreboard.display.sidebar(object objective); //displays objective in displayslot sidebar
+scoreboard.display.list(object objective); //displays objective in displayslot list
 ```
 ###Specialities
 ```javascript
@@ -110,4 +114,25 @@ myFunction(42, "hello world"); //can give arguments to functions
 
 x = 2 * myInt; // wont work use x = myInt; x *= 2; instead
 //anyhow supporting this is a planned feature
+```
+
+###Compiletime vs Runtime
+```javascript
+//note this will create 3 commandblocks
+//say current value of i: 0
+//say current value of i: 1
+//say current value of i: 2
+static for(static int i = 0; i < 3; i++)
+{
+	command("current value of i: ", i);
+}
+
+//this in contrast will create a scoreboard score with the value 0
+//it will tellraw this value to the player
+//and add 1 to it until the value is 3
+for(int i = 0; i < 3; i++)
+{
+	tellraw("current value of i: ", i);
+}
+
 ```
