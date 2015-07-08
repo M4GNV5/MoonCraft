@@ -1,11 +1,11 @@
-cplApi.scoreboard = ["objective", "score", "display", "team"];
+cplApi.scoreboard = {};
 
-cplApi.objective = function(name, type, displayName)
+cplApi.scoreboard.objective = function(name, type, displayName)
 {
 	type = type || "dummy";
 	return new Scoreboard.Objective(new Scoreboard.ObjectiveType(type), name, displayName);
 };
-cplApi.score = function(objective, sel)
+cplApi.scoreboard.score = function(objective, sel)
 {
 	if(objective instanceof Scoreboard.Objective)
 		return new Scoreboard.Score(objective, sel);
@@ -13,22 +13,22 @@ cplApi.score = function(objective, sel)
 		return new Scoreboard.Score(cplApi.objective(objective.toString()), sel);
 };
 
-cplApi.display = {};
-cplApi.display.belowName = function(objective)
+cplApi.scoreboard.display = {};
+cplApi.scoreboard.display.belowName = function(objective)
 {
 	if(typeof objective != 'undefined')
 		objective.setDisplay(Scoreboard.DisplaySlot.belowName);
 	else
 		Scoreboard.Objective.clearDisplay(Scoreboard.DisplaySlot.belowName);
 };
-cplApi.display.sidebar = function(objective)
+cplApi.scoreboard.display.sidebar = function(objective)
 {
 	if(typeof objective != 'undefined')
 		objective.setDisplay(Scoreboard.DisplaySlot.sidebar);
 	else
 		Scoreboard.Objective.clearDisplay(Scoreboard.DisplaySlot.sidebar);
 };
-cplApi.display.list = function(objective)
+cplApi.scoreboard.display.list = function(objective)
 {
 	if(typeof objective != 'undefined')
 		objective.setDisplay(Scoreboard.DisplaySlot.list);
@@ -38,7 +38,7 @@ cplApi.display.list = function(objective)
 
 
 
-cplApi.team = function(name, displayName)
+cplApi.scoreboard.team = function(name, displayName)
 {
 	var _team = new Scoreboard.Team(name, displayName);
 	_team.setOption = function(option, value)
