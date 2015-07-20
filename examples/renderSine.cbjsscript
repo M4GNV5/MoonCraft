@@ -18,7 +18,7 @@ for(fixed i = start; i <= stop; i += 0.2)
 
 function renderValue(fixed x, fixed y)
 {
-    command("summon ArmorStand 0 10 0 {CustomName:\\"curr\\",NoGravity:true,Invisible:true,Equipment:[{},{},{},{},{id:wool,Count:1b}]}");
+    command("summon ArmorStand 0 10 0 {CustomName:curr,NoGravity:true,Invisible:true,Equipment:[{},{},{},{},{id:wool,Count:1b}]}");
     if(x >= 0)
     {
         while(x >= 1)
