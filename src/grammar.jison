@@ -192,7 +192,7 @@ FunctionDefinition
 				{
 					var ctor = $4[i].ctor;
 					var name = $4[i].name;
-					
+
 					Util.assert(!typeMismatch(ctor.defaultValue, arguments[i]), "Type mismatch: function {0} requires argument {1} to be of type {2} not {3}"
 						.format($2, name, ctor.defaultValue.constructor.name, arguments[i].constructor.name));
 
@@ -315,7 +315,7 @@ Boolean
 DefinitionStatement
 	: ModifierList VariableType 'IDENTIFIER'
 		{
-			checkModifiers($1, ["static"], "variable definitions", @1);
+			checkModifiers($1, $2.allowedModifiers, $2.modifierErrorLabel, @1);
 			$$ = function()
 			{
 				if($1.indexOf("static") === -1)
@@ -327,12 +327,12 @@ DefinitionStatement
 				{
 					vars[$3] = new StaticVariable();
 				}
-				
+
 			};
 		}
 	| ModifierList VariableType 'IDENTIFIER' '=' InlineVariable
 		{
-			checkModifiers($1, ["static"], "variable definitions", @1);
+			checkModifiers($1, $2.allowedModifiers, $2.modifierErrorLabel, @1);
 			$$ = function()
 			{
 				if($1.indexOf("static") === -1)
@@ -352,11 +352,44 @@ DefinitionStatement
 
 VariableType
 	: 'BOOL_KEYWORD'
-		{ $$ = function(value, name) { return new Runtime.Boolean(value, name); }; $$.defaultValue = false; }
+		{
+			$$ = function(value, name)
+			{
+				var val = new Runtime.Boolean(false, name);
+				if(typeof value != 'undefined')
+					val.set(value);
+				return val;
+			};
+			$$.defaultValue = false;
+			$$.allowedModifiers = ["static"];
+			$$.modifierErrorLabel = "boolean definition";
+		}
 	| 'INT_KEYWORD'
-		{ $$ = function(value, name) { return new Runtime.Integer(value, name); }; $$.defaultValue = 0; }
+		{
+			$$ = function(value, name)
+			{
+				var val = new Runtime.Integer(0, name);
+				if(typeof value != 'undefined')
+					val.set(value);
+				return val;
+			};
+			$$.defaultValue = 0;
+			$$.allowedModifiers = ["static"];
+			$$.modifierErrorLabel = "integer definition";
+		}
 	| 'FIXED_KEYWORD'
-		{ $$ = function(value, name) { return new Runtime.Decimal(value, name); }; $$.defaultValue = 0.0; }
+		{
+			$$ = function(value, name)
+			{
+				var val = new Runtime.Decimal(0, name);
+				if(typeof value != 'undefined')
+					val.set(value);
+				return val;
+			};
+			$$.defaultValue = 0.0;
+			$$.allowedModifiers = ["static"];
+			$$.modifierErrorLabel = "fixed definition";
+		}
 	| 'STRING_KEYWORD'
 		{
 			$$ = function(value, name)
@@ -368,6 +401,8 @@ VariableType
 				return val;
 			};
 			$$.defaultValue = "";
+			$$.allowedModifiers = ["static"];
+			$$.modifierErrorLabel = "string definition";
 		}
 	| 'DELEGATE_KEYWORD'
 		{
@@ -380,6 +415,8 @@ VariableType
 				return val;
 			};
 			$$.defaultValue = function() {};
+			$$.allowedModifiers = [];
+			$$.modifierErrorLabel = "delegate definition";
 		}
 	| 'OBJECT_KEYWORD'
 		{
@@ -391,6 +428,8 @@ VariableType
 					return value;
 			};
 			$$.defaultValue = {};
+			$$.allowedModifiers = [];
+			$$.modifierErrorLabel = "object definition";
 		}
 	;
 
@@ -400,15 +439,14 @@ AssignStatement
 		{
 			$$ = function()
 			{
+				var left = $1();
 				var right = $3();
 
-				checkUndefined($1, @1);
-
-				Util.assert(!typeMismatch(vars[$1], right), "Type mismatch: cannot assign {0} to {1} at line {2} column {3} to {4}"
-					.format(right.constructor.name, vars[$1].constructor.name, @2.first_line, @2.first_column, @2.last_column));
+				Util.assert(!typeMismatch(left, right), "Type mismatch: cannot assign {0} to {1} at line {2} column {3} to {4}"
+					.format(right.constructor.name, left.constructor.name, @2.first_line, @2.first_column, @2.last_column));
 
 
-				$2(vars[$1], right);
+				$2(left, right);
 			};
 		}
 	| 'IDENTIFIER' SingleAssignmentOperator
