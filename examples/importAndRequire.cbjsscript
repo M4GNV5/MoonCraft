@@ -1,6 +1,5 @@
 //so lets say we want to output pi
 //to do that we need to import or require the module math and get its member pi
-//therefore we have two general options: using import or require
 //import adds the required module/function to the global scope
 //require however returns the specified module/function
 
