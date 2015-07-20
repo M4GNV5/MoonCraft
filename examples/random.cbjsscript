@@ -1,3 +1,7 @@
+//import math & chat.out
+import("math");
+import("chat.out");
+
 int rnd = 5;
 bool searching = true;
 
@@ -5,7 +9,7 @@ while(searching)
 {
 	rnd = math.random();
 	out(rnd);
-	
+
 	if(rnd == 42)
 		searching = false;
 }

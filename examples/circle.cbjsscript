@@ -1,5 +1,8 @@
+//import chat.tellraw for output
+import("chat.tellraw");
+
 //setup variables
-fixed pi = math.pi();
+fixed pi = require("math").pi();
 fixed circumference = 0.0;
 fixed area = 0.0;
 

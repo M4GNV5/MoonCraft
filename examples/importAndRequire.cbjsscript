@@ -1,0 +1,27 @@
+//so lets say we want to output pi
+//to do that we need to import or require the module math and get its member pi
+//therefore we have two general options: using import or require
+//import adds the required module/function to the global scope
+//require however returns the specified module/function
+
+//method 1: importing math:
+//note: importing * would also work but would also import all other modules
+import("math");
+fixed method1 = math.pi();
+
+//method 2: importing math.pi:
+//note: importing math.* would work too but would also import all other math functions
+import("math.pi");
+fixed method2 = pi();
+
+//method 3: requiring math:
+object math = require("math");
+fixed method3 = math.pi();
+
+//method 4: requiring math and using it directly:
+fixed method4 = require("math").pi();
+
+//method 5: requiring math.pi
+object mathPi = require("math.pi");
+fixed method5 = mathPi();
+//note: you could also use the required function directly like in method 4
