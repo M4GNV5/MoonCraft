@@ -13,7 +13,6 @@ for(fixed i = start; i <= stop; i += 0.2)
     tellraw("Sine of ", i, " is ", result);
     fixed x = i;
     renderValue(x, result);
-    command("setblock ~ ~1 ~ stone");
 }
 
 function renderValue(fixed x, fixed y)
