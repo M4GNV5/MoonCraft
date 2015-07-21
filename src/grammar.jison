@@ -145,9 +145,9 @@ ComparationOperator
 	: "=="
 		{ $$ = function(left, right, callback) { checkOperator(left, "isExact", "==", @1); return left.isExact(right, callback); }; }
 	| ">"
-		{ $$ = function(left, right, callback) { checkOperator(left, "isBetween", ">", @1); return left.isBetween(right + 1, undefined, callback); }; }
+		{ $$ = function(left, right, callback, stepToNext) { checkOperator(left, "isBetween", ">", @1); return left.isBetween(right + stepToNext, undefined, callback); }; }
 	| "<"
-		{ $$ = function(left, right, callback) { checkOperator(left, "isBetween", "<", @1); return left.isBetween(undefined, right - 1, callback); }; }
+		{ $$ = function(left, right, callback, stepToNext) { checkOperator(left, "isBetween", "<", @1); return left.isBetween(undefined, right - stepToNext, callback); }; }
 	| ">="
 		{ $$ = function(left, right, callback) { checkOperator(left, "isBetween", ">=", @1); return left.isBetween(right, undefined, callback); }; }
 	| "<="
@@ -527,16 +527,18 @@ ValidateExpression
 					var copy = left.clone();
 					copy.remove(right);
 
-					return $2(copy, 0, callback, right);
+					var stepToNext = copy instanceof Runtime.Decimal ? 0.01 : 1;
+
+					return $2(copy, 0, callback, stepToNext);
 				}
 				else
 				{
 					var _left = (typeof left == 'object') ? left : right;
 					var _right = (typeof left == 'object') ? right : left;
 
+					var stepToNext = _left instanceof Runtime.Decimal ? 0.01 : 1;
 
-
-					return $2(_left, _right, callback);
+					return $2(_left, _right, callback, stepToNext);
 				}
 			};
 		}
