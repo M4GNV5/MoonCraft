@@ -56,7 +56,7 @@
 '-'?[0-9]+'.'[0-9]{0,2}  { return 'DECIMAL'; }
 '-'?[0-9]+               { return 'INTEGER'; }
 
-'@'[prae]('['[a-zA-Z0-9,=!]*']')? { return 'SELECTOR' }
+'@'[prae]('['[a-zA-Z0-9,=!_]*']')? { return 'SELECTOR' }
 
 [a-zA-Z_][a-zA-Z_0-9]*   { return 'IDENTIFIER'; }
 
