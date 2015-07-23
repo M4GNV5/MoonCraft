@@ -520,15 +520,23 @@ ValidateExpression
 				}
 				else if(typeof left == 'object' && typeof right == 'object')
 				{
-					checkOperator(left, "clone", "clone", @1);
-					checkOperator(left, "remove", "-=", @1);
+					var copy = left;
+					var val = right;
+					if(typeof left.type == 'undefined')
+					{
+						api.log(typeof left);
+						checkOperator(left, "clone", "clone", @1);
+						checkOperator(left, "remove", "-=", @1);
 
-					var copy = left.clone();
-					copy.remove(right);
+						copy = left.clone();
+						copy.remove(right);
+
+						val = 0;
+					}
 
 					var stepToNext = copy instanceof Runtime.Decimal ? 0.01 : 1;
 
-					return $2(copy, 0, callback, stepToNext);
+					return $2(copy, val, callback, stepToNext);
 				}
 				else
 				{
