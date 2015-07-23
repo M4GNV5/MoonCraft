@@ -17,9 +17,7 @@ function createStaticVar(value, name)
 	value.toTellrawExtra = function()
 	{
 		var val;
-		if(typeof value.toTellrawExtra == 'function')
-			val = value.toTellrawExtra();
-		else if(typeof value == 'object')
+		if(value.type == 'object')
 			val = JSON.stringify(value);
 		else
 			val = value.toString();

@@ -324,7 +324,7 @@ DefinitionStatement
 				}
 				else
 				{
-					vars[$3] = new StaticVariable();
+					vars[$3] = createStaticVar($2.defaultValue, $3);
 				}
 
 			};
