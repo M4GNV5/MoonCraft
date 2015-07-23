@@ -25,3 +25,34 @@ cplApi.construct = function()
 
 	return new ctor();
 }
+
+cplApi.array = function()
+{
+	var obj = [];
+	obj.get = function(index)
+	{
+		return obj[index];
+	}
+	obj.set = function(index, value)
+	{
+		obj[index] = value;
+	}
+	return obj;
+}
+cplApi.object = function()
+{
+	var obj = {};
+	obj.get = function(name)
+	{
+		return obj[name];
+	}
+	obj.set = function(name, value)
+	{
+		obj[name] = value;
+	}
+	obj.keys = function()
+	{
+		Object.keys(obj);
+	}
+	return obj;
+}
