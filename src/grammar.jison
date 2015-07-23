@@ -198,7 +198,7 @@ FunctionDefinition
 					if(typeof arguments[i] == 'object')
 						vars[name] = arguments[i];
 					else
-						vars[name] = ctor(arguments[i], name);
+						vars[name] = createStaticVar(arguments[i], name);
 				}
 
 
