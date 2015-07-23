@@ -24,7 +24,7 @@ cpl.import = function(name)
 		{
 			for(var _name in val)
 			{
-				if(val.hasOwnValue(_name))
+				if(val.hasOwnProperty(_name))
 				{
 					cpl.import(name.replace("*", _name));
 				}
@@ -35,7 +35,7 @@ cpl.import = function(name)
 		{
 			val = val[split[i]];
 			if(typeof val == 'undefined')
-				throw "Invalid import "+name;
+				throw "Invalid import " + name;
 		}
 	}
 
@@ -51,6 +51,9 @@ cpl.require = function(name)
 	var val = cplApi[split[0]];
 	for(var i = 1; i < split.length; i++)
 		val = val[split[i]];
+
+	if(typeof val == 'undefined')
+		throw "Invalid require " + name;
 
 	return val;
 }
