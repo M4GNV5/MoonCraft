@@ -161,7 +161,6 @@ SingleStatement
 	| AssignStatement ';'
 	| DefinitionStatement ';'
 	| InlineVariable ';'
-	| AsyncFunctionCall ';'
 	;
 
 
@@ -342,7 +341,7 @@ DefinitionStatement
 				}
 				else
 				{
-					vars[$3] = new StaticVariable($5());
+					vars[$3] = createStaticVar($5(), $3);
 				}
 			};
 		}
@@ -415,7 +414,7 @@ VariableType
 				return val;
 			};
 			$$.defaultValue = function() {};
-			$$.allowedModifiers = [];
+			$$.allowedModifiers = ["static"];
 			$$.modifierErrorLabel = "delegate definition";
 		}
 	| 'OBJECT_KEYWORD'
@@ -423,7 +422,7 @@ VariableType
 			$$ = function(value, name)
 			{
 				if(typeof value == 'undefined')
-					throw "object needs intialization value at line {0} colums {1} to {2}".format(@1.first_line, @1.first_column, @1.last_column);
+					throw "object {0} needs intialization value at line {1} colums {2} to {3}".format(name, @1.first_line, @1.first_column, @1.last_column);
 				else
 					return value;
 			};

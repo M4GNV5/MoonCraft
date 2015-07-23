@@ -1,62 +1,43 @@
-function StaticVariable(value)
+function createStaticVar(value, name)
 {
-	this.value = value;
+	var type = typeof value;
+	value = new Object(value);
+	value.type = type;
 
-	this.set = function(val)
+	function _set(val)
 	{
-		this.value = val;
-	}
-
-	this.add = function(val)
-	{
-		this.value += val;
-	}
-	this.remove = function(val)
-	{
-		this.value -= val;
-	}
-	this.multiplicate = function(val)
-	{
-		this.value *= val;
-	}
-	this.divide = function(val)
-	{
-		this.value /= val;
+		vars[name] = createStaticVar(val, name);
 	}
 
-	this.toString = function()
+	value.set = function(val)
 	{
-		return this.value.toString();
+		_set(val);
 	}
-	this.toTellrawExtra = function()
+
+	value.toTellrawExtra = function()
 	{
 		var val;
-		if(typeof this.value.toTellrawExtra == 'function')
-			val = this.value.toTellrawExtra();
-		else if(typeof this.value == 'object')
-			val = JSON.stringify(this.value);
+		if(typeof value.toTellrawExtra == 'function')
+			val = value.toTellrawExtra();
+		else if(typeof value == 'object')
+			val = JSON.stringify(value);
 		else
-			val = this.value.toString();
+			val = value.toString();
 
 		return new Chat.Message(val);
 	}
 
-	this.isBetween = function(min, max, callback)
+	value.isExact = function(val, callback)
 	{
-		if(typeof min == 'undefined')
-			min = -2147483648;
-		if(typeof max == 'undefined')
-			max = 2147483648;
-
 		var cmd;
-		if(this.value >= min && this.value <= max)
+		if(vars[name] == val)
 		{
 			cmd = new MinecraftCommand("tetsfor @e");
 			cmd.result = true;
 		}
 		else
 		{
-			cmd = new MinecraftCommand("{0} <= {1} <= {2} is false".format(min, this.value.toString(), max));
+			cmd = new MinecraftCommand("{0} == {1} is false".format(vars[name], val));
 			cmd.result = false;
 		}
 
@@ -65,23 +46,60 @@ function StaticVariable(value)
 
 		return cmd;
 	}
-	this.isExact = function(val, callback)
+
+	if(value.type == 'string' || value.type == 'number')
 	{
-		var cmd;
-		if(this.value == val)
+		value.add = function(val)
 		{
-			cmd = new MinecraftCommand("tetsfor @e");
-			cmd.result = true;
+			_set(vars[name] + val);
 		}
-		else
-		{
-			cmd = new MinecraftCommand("{0} == {1} is false".format(this.value, val));
-			cmd.result = false;
-		}
-
-		if(typeof callback != 'undefined')
-			cmd.validate(callback);
-
-		return cmd;
 	}
+
+	if(value.type == 'number')
+	{
+		value.remove = function(val)
+		{
+			_set(vars[name] - val);
+		}
+		value.multiplicate = function(val)
+		{
+			_set(vars[name] * val);
+		}
+		value.divide = function(val)
+		{
+			_set(vars[name] / val);
+		}
+
+		value.toInteger = function()
+		{
+			var val = parseInt(vars[name]);
+			return new Runtime.Integer(val, "const" + val);
+		}
+		value.isBetween = function(min, max, callback)
+		{
+			if(typeof min == 'undefined')
+				min = -2147483648;
+			if(typeof max == 'undefined')
+				max = 2147483648;
+
+			var cmd;
+			if(vars[name] >= min && vars[name] <= max)
+			{
+				cmd = new MinecraftCommand("tetsfor @e");
+				cmd.result = true;
+			}
+			else
+			{
+				cmd = new MinecraftCommand("{0} <= {1} <= {2} is false".format(min, vars[name].toString(), max));
+				cmd.result = false;
+			}
+
+			if(typeof callback != 'undefined')
+				cmd.validate(callback);
+
+			return cmd;
+		}
+	}
+
+	return value;
 }

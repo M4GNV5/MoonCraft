@@ -31,15 +31,13 @@ function typeMismatch(left, right)
 
 	if(left.constructor == right.constructor)
 		return false;
-	else if(left instanceof Runtime.Boolean && typeof right == 'boolean')
+	else if(left instanceof Runtime.Boolean && right.constructor == (true).constructor)
 		return false;
 	else if(numberTypes.indexOf(left.constructor) !== -1 && numberTypes.indexOf(right.constructor) !== -1)
 		return false;
-	else if(left instanceof Runtime.String && typeof right == 'string')
+	else if(left instanceof Runtime.String && right.constructor == ("").constructor)
 		return false;
-	else if(left instanceof Runtime.Callback && typeof right == 'function')
-		return false;
-	else if(left instanceof StaticVariable)
+	else if(left instanceof Runtime.Callback && right.constructor == (function() {}).constructor)
 		return false;
 	else
 		return true;
@@ -86,7 +84,7 @@ function startNewFunction()
 	val.goNext = function()
 	{
 		needsHelperCommands.push(id);
-		
+
 		outputHandler.current = id;
 	};
 
