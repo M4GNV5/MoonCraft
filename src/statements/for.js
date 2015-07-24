@@ -38,9 +38,10 @@ var forStatement = function(init, comparation, assign, body)
 
 	this.asyncstatic = function()
 	{
+		var that = this;
 		call(function()
 		{
-			this.static();
+			that.static();
 		});
 	};
 };

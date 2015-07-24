@@ -13,7 +13,7 @@ var ifStatement = function(comparation, body)
 
 	this.async = function()
 	{
-		comparation().validate(body);
+		comparation().validate(function() { body(); });
 	};
 
 	this.static = function()
@@ -76,5 +76,3 @@ var ifElseStatement = function(comparation, body, elseBody)
 		});
 	};
 };
-
-
