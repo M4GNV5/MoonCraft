@@ -50,14 +50,14 @@ cplApi.math.pow = function(base, exponent)
 	var staticBase;
 	if(typeof base == 'number')
 		staticBase = base;
-	else if(base instanceof StaticVariable)
-		staticBase = base.value;
+	else if(base.type == 'number')
+		staticBase = base + 0;
 
 	var staticExponent;
 	if(typeof exponent == 'number')
 		staticExponent = exponent;
-	else if(exponent instanceof StaticVariable)
-		staticExponent = exponent.value;
+	else if(exponent.type == 'number')
+		staticExponent = exponent + 0;
 
 	if(typeof staticBase == 'number' && typeof staticExponent == 'number')
 		return Math.pow(staticBase, staticExponent);
@@ -77,8 +77,8 @@ cplApi.math.sin = function(value)
 {
 	if(typeof value == 'number')
 		return Math.sin(value);
-	else if(value instanceof StaticVariable)
-		return Math.sin(value.value);
+	else if(value.type == 'number')
+		return Math.sin(value + 0);
 
 	var next = startNewFunction();
 	var result = new Runtime.Decimal();
@@ -93,8 +93,8 @@ cplApi.math.sqrt = function(value)
 {
 	if(typeof value == 'number')
 		return Math.sqrt(value);
-	else if(value instanceof StaticVariable)
-		return Math.sqrt(value.value);
+	else if(value.type == 'number')
+		return Math.sqrt(value + 0);
 
 	var next = startNewFunction();
 	var result = new Runtime.Decimal();
@@ -109,8 +109,8 @@ cplApi.math.factorial = function(value)
 {
 	if(typeof value == 'number')
 		return staticFactorial(value);
-	else if(value instanceof StaticVariable)
-		return staticFactorial(value.value);
+	else if(value.type == 'number')
+		return staticFactorial(value + 0);
 
 	var next = startNewFunction();
 	var result = new Runtime.Decimal();

@@ -10,8 +10,6 @@ cplApi.MinecraftCommand = MinecraftCommand;
 cplApi.construct = function()
 {
 	var other = arguments[0];
-	if(other instanceof StaticVariable)
-		other = other.value;
 
 	var args = [];
 	for(var i = 1; i < arguments.length; i++)

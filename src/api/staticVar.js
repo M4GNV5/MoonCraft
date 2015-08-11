@@ -1,8 +1,11 @@
 function createStaticVar(value, name)
 {
-	var type = typeof value;
-	value = new Object(value);
-	value.type = type;
+	if(typeof value.type == 'undefined') //is already a static var
+	{
+		var type = typeof value;
+		value = new Object(value);
+		value.type = type;
+	}
 
 	function _set(val)
 	{
