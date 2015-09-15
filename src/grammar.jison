@@ -476,13 +476,14 @@ ValidateExpression
 				Util.assert(!typeMismatch(left, true), "Type mismatch: cannot compare {0} and {1} at line {2} column {3} to {4}"
 					.format("boolean", left.constructor.name, @1.first_line, @1.first_column, @1.last_column));
 
-				if(left instanceof Runtime.Boolean)
+				if(left instanceof Runtime.Boolean || left.type == 'boolean')
 				{
 					return left.isTrue(callback);
 				}
 				else if(typeof left == 'boolean' && left)
 				{
-					call(callback);
+					if(typeof callback != 'undefined')
+						call(callback);
 
 					return new MinecraftCommand("testfor @e");
 				}
@@ -524,7 +525,6 @@ ValidateExpression
 					var val = right;
 					if(typeof left.type == 'undefined')
 					{
-						api.log(typeof left);
 						checkOperator(left, "clone", "clone", @1);
 						checkOperator(left, "remove", "-=", @1);
 

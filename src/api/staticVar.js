@@ -56,6 +56,48 @@ function createStaticVar(value, name)
 		}
 	}
 
+	if(value.type == 'boolean')
+	{
+		value.isTrue = function(callback)
+		{
+			var cmd;
+			if(vars[name] == true)
+			{
+				cmd = new MinecraftCommand("tetsfor @e");
+				cmd.result = true;
+			}
+			else
+			{
+				cmd = new MinecraftCommand("{0} is true".format(vars[name]));
+				cmd.result = false;
+			}
+
+			if(typeof callback != 'undefined')
+				cmd.validate(callback);
+
+			return cmd;
+		}
+		value.isFalse = function(callback)
+		{
+			var cmd;
+			if(vars[name] != true)
+			{
+				cmd = new MinecraftCommand("tetsfor @e");
+				cmd.result = true;
+			}
+			else
+			{
+				cmd = new MinecraftCommand("{0} is false".format(vars[name]));
+				cmd.result = false;
+			}
+
+			if(typeof callback != 'undefined')
+				cmd.validate(callback);
+
+			return cmd;
+		}
+	}
+
 	if(value.type == 'number')
 	{
 		value.remove = function(val)
