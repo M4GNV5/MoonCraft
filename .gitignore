@@ -1,8 +1,2 @@
 # private script
 src/run_example.bat
-
-# output directory
-src/out/
-
-# sublime workspace file
-*.sublime-workspace

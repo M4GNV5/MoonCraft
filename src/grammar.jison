@@ -1,4 +1,4 @@
-﻿%lex
+%lex
 %%
 
 // tokens
@@ -31,10 +31,12 @@
 "{"                      { return '{'; }
 "}"                      { return '}'; }
 
-'function'               { return 'FUNCTION'; }
+'bool'                   { return 'BOOL_KEYWORD'; }
+'int'                    { return 'INT_KEYWORD'; }
+'float'                  { return 'FLOAT_KEYWORD'; }
+'string'                 { return 'STRING_KEYWORD'; }
 
-'static'                 { return 'STATIC_KEYWORD'; }
-'async'                  { return 'ASYNC_KEYWORD'; }
+'return'                 { return 'RETURN'; }
 
 'if'                     { return 'IF'; }
 'else'                   { return 'ELSE'; }
@@ -43,24 +45,15 @@
 'do'                     { return 'DO'; }
 'for'                    { return 'FOR'; }
 
-'bool'                   { return 'BOOL_KEYWORD'; }
-'int'                    { return 'INT_KEYWORD'; }
-'fixed'                  { return 'FIXED_KEYWORD'; }
-'string'                 { return 'STRING_KEYWORD'; }
-'delegate'               { return 'DELEGATE_KEYWORD'; }
-'object'                 { return 'OBJECT_KEYWORD'; }
-
 'true'                   { return 'TRUE'; }
 'false'                  { return 'FALSE'; }
 
 '-'?[0-9]+'.'[0-9]{0,2}  { return 'DECIMAL'; }
 '-'?[0-9]+               { return 'INTEGER'; }
 
-'@'[prae]('['[a-zA-Z0-9,=!_]*']')? { return 'SELECTOR' }
-
 [a-zA-Z_][a-zA-Z_0-9]*   { return 'IDENTIFIER'; }
 
-\"((\\\")|[^\"])*\"      { return 'STRING'; } //"
+'"'((\\\")|[^"])+'"'     { yytext = yytext.slice(1, -1).replace(/\\"/g, "\""); return 'STRING'; }
 
 <<EOF>>                  { return 'EOF'; }
 
@@ -68,26 +61,16 @@
 
 %%
 
-// pls sublime
-
 Program
 	: StatementList EOF
 		{
 			return function()
 			{
-				var startFunc = outputHandler.current;
-				needsHelperCommands = [];
-
 				for(var i = 0; i < $1.length; i++)
 				{
 					if(typeof $1[i] != 'undefined')
 						$1[i]();
 				}
-
-				for(var i = 0; i < needsHelperCommands.length; i++)
-					outputHandler.addCallHelperCommands(needsHelperCommands[i]);
-
-				outputHandler.current = startFunc;
 			};
 		}
 	;
@@ -106,52 +89,38 @@ StatementSeperator
 
 
 
-ModifierList
-	: ModifierList Modifier
-		{ $$ = $1.concat($2); }
-	|
-		{ $$ = []; }
-	;
-
-Modifier
-	: 'ASYNC_KEYWORD'
-	| 'STATIC_KEYWORD'
-	;
-
-
-
 AssignmentOperator
 	: "="
-		{ $$ = function(left, right) { checkOperator(left, "set", "=", @1); left.set(right); } }
+		{ $$ = function(left, right) { util.checkOperator(left, "set", "=", @1); left.set(right); } }
 	| "+="
-		{ $$ = function(left, right) { checkOperator(left, "add", "+=", @1); left.add(right); }; }
+		{ $$ = function(left, right) { util.checkOperator(left, "add", "+=", @1); left.add(right); }; }
 	| "-="
-		{ $$ = function(left, right) { checkOperator(left, "remove", "-=", @1); left.remove(right); }; }
+		{ $$ = function(left, right) { util.checkOperator(left, "remove", "-=", @1); left.remove(right); }; }
 	| "*="
-		{ $$ = function(left, right) { checkOperator(left, "multiplicate", "*=", @1); left.multiplicate(right); }; }
+		{ $$ = function(left, right) { util.checkOperator(left, "multiplicate", "*=", @1); left.multiplicate(right); }; }
 	| "/="
-		{ $$ = function(left, right) { checkOperator(left, "divide", "/=", @1); left.divide(right); }; }
+		{ $$ = function(left, right) { util.checkOperator(left, "divide", "/=", @1); left.divide(right); }; }
 	| "%="
-		{ $$ = function(left, right) { checkOperator(left, "divide", "%=", @1); left.set(right, Runtime.NumberSetMode.divisionRemainder); }; }
+		{ $$ = function(left, right) { util.checkOperator(left, "mod", "%=", @1); left.mod(right); }; }
 	;
 SingleAssignmentOperator
 	: "++"
-		{ $$ = function(left) { checkOperator(left, "add", "++", @1); left.add(1); }; }
+		{ $$ = function(left) { util.checkOperator(left, "add", "++", @1); left.add(1); }; }
 	| "--"
-		{ $$ = function(left) { checkOperator(left, "remove", "--", @1); left.remove(1); }; }
+		{ $$ = function(left) { util.checkOperator(left, "remove", "--", @1); left.remove(1); }; }
 	;
 
 ComparationOperator
 	: "=="
-		{ $$ = function(left, right, callback) { checkOperator(left, "isExact", "==", @1); return left.isExact(right, callback); }; }
+		{ $$ = function(left, right) { util.checkOperator(left, "isExact", "==", @1); return left.isExact(right); }; }
 	| ">"
-		{ $$ = function(left, right, callback, stepToNext) { checkOperator(left, "isBetween", ">", @1); return left.isBetween(right + stepToNext, undefined, callback); }; }
+		{ $$ = function(left, right) { util.checkOperator(left, "isBetweenEx", ">", @1); return left.isBetweenEx(right, undefined); }; }
 	| "<"
-		{ $$ = function(left, right, callback, stepToNext) { checkOperator(left, "isBetween", "<", @1); return left.isBetween(undefined, right - stepToNext, callback); }; }
+		{ $$ = function(left, right) { util.checkOperator(left, "isBetweenEx", "<", @1); return left.isBetweenEx(undefined, right); }; }
 	| ">="
-		{ $$ = function(left, right, callback) { checkOperator(left, "isBetween", ">=", @1); return left.isBetween(right, undefined, callback); }; }
+		{ $$ = function(left, right) { util.checkOperator(left, "isBetween", ">=", @1); return left.isBetween(right, undefined); }; }
 	| "<="
-		{ $$ = function(left, right, callback) { checkOperator(left, "isBetween", "<=", @1); return left.isBetween(undefined, right, callback); }; }
+		{ $$ = function(left, right) { util.checkOperator(left, "isBetween", "<=", @1); return left.isBetween(undefined, right); }; }
 	;
 
 
@@ -161,6 +130,7 @@ SingleStatement
 	| AssignStatement ';'
 	| DefinitionStatement ';'
 	| InlineVariable ';'
+	| ReturnStatement ';'
 	;
 
 
@@ -178,32 +148,49 @@ Statement
 
 
 FunctionDefinition
-	: 'FUNCTION' 'IDENTIFIER' '(' ParameterDefinitionList ')' Block
+	: VariableType 'IDENTIFIER' '(' ParameterDefinitionList ')' Block
 		{
 			$$ = function() {};
 
 			functions[$2] = function()
 			{
-				Util.assert($4.length == arguments.length, "Invalid call signature: function {0} requries {1} arguments not {2}"
+				util.assert($4.length == arguments.length, "Invalid call signature: function {0} requries {1} arguments not {2}"
 					.format($2, $4.length, arguments.length));
 
 				for(var i = 0; i < $4.length; i++)
 				{
 					var ctor = $4[i].ctor;
 					var name = $4[i].name;
+					var varName = $2 + "_" + name;
 
-					Util.assert(!typeMismatch(ctor.defaultValue, arguments[i]), "Type mismatch: function {0} requires argument {1} to be of type {2} not {3}"
-						.format($2, name, ctor.defaultValue.constructor.name, arguments[i].constructor.name));
+					util.assert(!util.typeMismatch(ctor.defaultValue, arguments[i]), "Type mismatch: function {0} requires argument {1} to be of type {2} not {3}"
+						.format($2, name, ctor.typeName, arguments[i].constructor.name));
 
-					if(typeof arguments[i] == 'object')
-						vars[name] = arguments[i];
+					if(typeof arguments[i] == 'object' && typeof vars[name] == 'object')
+					{
+						util.checkOperator(vars[name], "set", "=", @4);
+						vars[name].set(arguments[i]);
+					}
 					else
-						vars[name] = createStaticVar(arguments[i], name);
+					{
+						vars[name] = ctor(arguments[i], varName);
+					}
 				}
 
+				base.rjump($2);
 
-				$6();
+				base.addFunction($2, function()
+				{
+					fnReturns[$1.typeName] = $1(undefined, "ret_" + $1.typeName);
+					$6();
+					base.ret();
+				});
+
+				return fnReturns[$1.typeName];
 			};
+
+			$$.typeName = $1.typeName;
+			functions[$2].typeName = $1.typeName;
 		}
 	;
 
@@ -218,30 +205,76 @@ ParameterDefinitionList
 
 
 
+VariableType
+	: 'BOOL_KEYWORD'
+		{
+			$$ = function(startVal)
+			{
+				return new types.Boolean(startVal);
+			};
+			$$.typeName = "Boolean";
+			$$.defaultValue = false;
+		}
+	| 'INT_KEYWORD'
+		{
+			$$ = function(startVal, name)
+			{
+				return new types.Integer(startVal, name);
+			};
+			$$.typeName = "Integer";
+			$$.defaultValue = 0;
+		}
+	| 'FLOAT_KEYWORD'
+		{
+			$$ = function(startVal)
+			{
+				return new types.Float(startVal);
+			};
+			$$.typeName = "Float";
+			$$.defaultValue = 0.0;
+		}
+	| 'STRING_KEYWORD'
+		{
+			$$ = function(startVal)
+			{
+				return new types.String(startVal);
+			};
+			$$.typeName = "String";
+			$$.defaultValue = "";
+		}
+	;
+
+
+
 FunctionCall
 	: InlineVariable '(' ParameterList ')'
 		{
 			$$ = function()
 			{
-				var left = $1();
-				if(left instanceof Runtime.Callback)
-				{
-					Util.assert($3.length < 1, "Delegates do not support parameter! At line {0} column {1} to {2}"
-						.format(@3.first_line, @3.first_column, @3.last_column));
-					left.emit();
-				}
-				else if(typeof left == 'function')
+				var val = $1();
+
+				if(typeof val == 'function')
 				{
 					var args = [];
 					for(var i = 0; i < $3.length; i++)
 						args[i] = $3[i]();
 
-					return left.apply(left.parent, args);
+					return val.apply(undefined, args);
+				}
+				else if(typeof val == 'string')
+				{
+					if($3.length > 0)
+					{
+						throw "Cannot give arguments to command at line {0} column {1} to {2}"
+							.format(@2.first_line, @2.first_column, @2.last_column);
+					}
+
+					command(val);
 				}
 				else
 				{
 					throw "TypeError: {0} is not a function at line {1} column {2} to {3}"
-						.format(left, @2.first_line, @2.first_column, @2.last_column);
+						.format(val, @2.first_line, @2.first_column, @2.last_column);
 				}
 			};
 		}
@@ -260,44 +293,17 @@ ParameterList
 
 InlineVariable
 	: Boolean
-		{ $$ = function() { return $1; } }
+		{ $$ = function() { return $1; }; $$.typeName = "Boolean"; }
 	| 'INTEGER'
-		{ $$ = function() { return parseInt($1); }; }
+		{ $$ = function() { return parseInt($1); }; $$.typeName = "Integer"; }
 	| 'DECIMAL'
-		{ $$ = function() { return parseFloat($1); }; $$.decimal = true; }
+		{ $$ = function() { return parseFloat($1); }; $$.typeName = "Float"; }
 	| 'STRING'
-		{ $$ = function() { return $1.substr(1, $1.length - 2).replace(/\\\"/g, "\""); }; }
+		{ $$ = function() { return $1; }; $$.typeName = "String"; }
 	| 'IDENTIFIER'
-		{ $$ = function() { checkUndefined($1, @1, true); return vars[$1] || functions[$1]; }; }
-	| 'FUNCTION' '(' ')' Block
-		{
-			$$ = function()
-			{
-				return function()
-				{
-					$4();
-				};
-			}
-		}
-	| 'SELECTOR'
-		{ $$ = function() { return Entities.Selector.parse($1); } }
+		{ $$ = function() { util.checkUndefined($1, @1, true); return vars[$1] || functions[$1]; }; }
 	| FunctionCall
-		{ $$ = $1; }
-	| InlineVariable '.' 'IDENTIFIER'
-		{
-			$$ = function()
-			{
-				var parent = $1();
-				if(typeof parent[$3] == 'undefined')
-					throw "Cannot read property {0} at line {1} column {2} to {3}"
-						.format($3, @3.first_line, @3.first_column, @3.last_column);
-
-				var child = $1()[$3];
-				child.parent = parent;
-
-				return child;
-			};
-		}
+		{ $$ = $1; $$.typeName = $1.typeName; }
 	;
 
 
@@ -312,125 +318,24 @@ Boolean
 
 
 DefinitionStatement
-	: ModifierList VariableType 'IDENTIFIER'
+	: VariableType 'IDENTIFIER'
 		{
-			checkModifiers($1, $2.allowedModifiers, $2.modifierErrorLabel, @1);
 			$$ = function()
 			{
-				if($1.indexOf("static") === -1)
-				{
-					checkDefined($3, @3);
-					vars[$3] = $2(undefined, $3);
-				}
-				else
-				{
-					vars[$3] = createStaticVar($2.defaultValue, $3);
-				}
-
+				util.checkDefined($2, @2);
+				vars[$2] = $1(undefined, $2);
 			};
 		}
-	| ModifierList VariableType 'IDENTIFIER' '=' InlineVariable
+	| VariableType 'IDENTIFIER' '=' InlineVariable
 		{
-			checkModifiers($1, $2.allowedModifiers, $2.modifierErrorLabel, @1);
 			$$ = function()
 			{
-				if($1.indexOf("static") === -1)
-				{
-					checkDefined($3, @3);
-					vars[$3] = $2($5(), $3);
-				}
-				else
-				{
-					vars[$3] = createStaticVar($5(), $3);
-				}
+				util.checkDefined($2, @2);
+				vars[$2] = $1($4(), $2);
 			};
 		}
 	;
 
-
-
-VariableType
-	: 'BOOL_KEYWORD'
-		{
-			$$ = function(value, name)
-			{
-				var val = new Runtime.Boolean(false, name);
-				if(typeof value != 'undefined')
-					val.set(value);
-				return val;
-			};
-			$$.defaultValue = false;
-			$$.allowedModifiers = ["static"];
-			$$.modifierErrorLabel = "boolean definition";
-		}
-	| 'INT_KEYWORD'
-		{
-			$$ = function(value, name)
-			{
-				var val = new Runtime.Integer(0, name);
-				if(typeof value != 'undefined')
-					val.set(value);
-				return val;
-			};
-			$$.defaultValue = 0;
-			$$.allowedModifiers = ["static"];
-			$$.modifierErrorLabel = "integer definition";
-		}
-	| 'FIXED_KEYWORD'
-		{
-			$$ = function(value, name)
-			{
-				var val = new Runtime.Decimal(0, name);
-				if(typeof value != 'undefined')
-					val.set(value);
-				return val;
-			};
-			$$.defaultValue = 0.0;
-			$$.allowedModifiers = ["static"];
-			$$.modifierErrorLabel = "fixed definition";
-		}
-	| 'STRING_KEYWORD'
-		{
-			$$ = function(value, name)
-			{
-				var val = new Runtime.String(name);
-				if(typeof value != 'undefined')
-					val.set(value);
-
-				return val;
-			};
-			$$.defaultValue = "";
-			$$.allowedModifiers = ["static"];
-			$$.modifierErrorLabel = "string definition";
-		}
-	| 'DELEGATE_KEYWORD'
-		{
-			$$ = function(value, name)
-			{
-				var val = new Runtime.Callback();
-				if(typeof value != 'undefined')
-					val.add(value);
-
-				return val;
-			};
-			$$.defaultValue = function() {};
-			$$.allowedModifiers = ["static"];
-			$$.modifierErrorLabel = "delegate definition";
-		}
-	| 'OBJECT_KEYWORD'
-		{
-			$$ = function(value, name)
-			{
-				if(typeof value == 'undefined')
-					throw "object {0} needs intialization value at line {1} colums {2} to {3}".format(name, @1.first_line, @1.first_column, @1.last_column);
-				else
-					return value;
-			};
-			$$.defaultValue = {};
-			$$.allowedModifiers = [];
-			$$.modifierErrorLabel = "object definition";
-		}
-	;
 
 
 AssignStatement
@@ -441,7 +346,7 @@ AssignStatement
 				var left = $1();
 				var right = $3();
 
-				Util.assert(!typeMismatch(left, right), "Type mismatch: cannot assign {0} to {1} at line {2} column {3} to {4}"
+				util.assert(!util.typeMismatch(left, right), "Type mismatch: cannot assign {0} to {1} at line {2} column {3} to {4}"
 					.format(right.constructor.name, left.constructor.name, @2.first_line, @2.first_column, @2.last_column));
 
 
@@ -452,7 +357,7 @@ AssignStatement
 		{
 			$$ = function()
 			{
-				checkUndefined($1, @1);
+				util.checkUndefined($1, @1);
 
 				$2(vars[$1]);
 			};
@@ -466,86 +371,41 @@ ValidateExpression
 		{
 			$$ = function(callback)
 			{
-				var left = $1();
+				var val = $1();
 
 				if(typeof left == 'string')
-				{
-					return new MinecraftCommand(left);
-				}
+					return left;
 
-				Util.assert(!typeMismatch(left, true), "Type mismatch: cannot compare {0} and {1} at line {2} column {3} to {4}"
-					.format("boolean", left.constructor.name, @1.first_line, @1.first_column, @1.last_column));
-
-				if(left instanceof Runtime.Boolean || left.type == 'boolean')
-				{
-					return left.isTrue(callback);
-				}
-				else if(typeof left == 'boolean' && left)
-				{
-					if(typeof callback != 'undefined')
-						call(callback);
-
-					return new MinecraftCommand("testfor @e");
-				}
-				else
-				{
-					return new MinecraftCommand("comparation of {0} and {1} was false".format(left, "true"));
-				}
-
+				checkOperator(left, "isExact", "== true", @1);
+				return left.isExact(true);
 			};
 		}
 	| InlineVariable ComparationOperator InlineVariable
 		{
-			$$ = function(callback)
+			$$ = function()
 			{
 				var left = $1();
 				var right = $3();
 
-				Util.assert(!typeMismatch(left, right), "Type mismatch: cannot compare {0} and {1} at line {2} column {3} to {4}"
-					.format(right.constructor.name, left.constructor.name, @2.first_line, @2.first_column, @2.last_column));
+				util.assert(!util.typeMismatch(left, right), "Type mismatch: cannot compare {0} and {1} at line {2} column {3} to {4}"
+					.format(left.constructor.name, right.constructor.name, @2.first_line, @2.first_column, @2.last_column));
 
-				if(typeof left != 'object' && typeof right != 'object')
+				if(typeof left == 'object' && typeof right == 'object')
 				{
-					if(left == right)
-					{
-						if(typeof callback != 'undefined')
-							call(callback);
+					util.checkOperator(left, "clone", "clone", @1);
+					copy = left.clone("comparation");
 
-						return new MinecraftCommand("testfor @e");
-					}
-					else
-					{
-						return new MinecraftCommand("comparation of {0} and {1} was false".format(left, right));
-					}
+					util.checkOperator(copy, "remove", "-=", @1);
+					copy.remove(right);
 
-				}
-				else if(typeof left == 'object' && typeof right == 'object')
-				{
-					var copy = left;
-					var val = right;
-					if(typeof left.type == 'undefined')
-					{
-						checkOperator(left, "clone", "clone", @1);
-						checkOperator(left, "remove", "-=", @1);
-
-						copy = left.clone();
-						copy.remove(right);
-
-						val = 0;
-					}
-
-					var stepToNext = copy instanceof Runtime.Decimal ? 0.01 : 1;
-
-					return $2(copy, val, callback, stepToNext);
+					return $2(copy, 0);
 				}
 				else
 				{
 					var _left = (typeof left == 'object') ? left : right;
 					var _right = (typeof left == 'object') ? right : left;
 
-					var stepToNext = _left instanceof Runtime.Decimal ? 0.01 : 1;
-
-					return $2(_left, _right, callback, stepToNext);
+					return $2(_left, _right);
 				}
 			};
 		}
@@ -564,61 +424,165 @@ Block
 		}
 	;
 
-IfStatement
-	: ModifierList 'IF' '(' ValidateExpression ')' SingleStatement 'ELSE' SingleStatement
+ReturnStatement
+	: 'RETURN' InlineVariable
 		{
-			checkModifiers($1, ["async", "static"], "if statements", @1);
 			$$ = function()
 			{
-				var stmt = new ifElseStatement($4, $6, $8);
-				runModifiedStatement(stmt, $1);
+				var val = $2();
+				var typeName = $2.typeName || val.constructor.name;
+
+				util.assert(fnReturns[typeName] && typeof fnReturns[typeName].set == "function",
+					"Invalid return statement at line {0} column {1} to {2}"
+						.format(@1.first_line, @1.first_column, @1.last_column));
+
+				fnReturns[typeName].set(val);
+
+				base.ret();
 			}
 		}
-	| ModifierList 'IF' '(' ValidateExpression ')' SingleStatement
+	;
+
+IfStatement
+	: 'IF' '(' ValidateExpression ')' SingleStatement 'ELSE' SingleStatement
 		{
-			checkModifiers($1, ["async", "static"], "if statements", @1);
 			$$ = function()
 			{
-				var stmt = new ifStatement($4, $6);
-				runModifiedStatement(stmt, $1);
+				var ifName = util.nextName("if");
+				var elseName = ifName + "else";
+				var endName = ifName + "end";
+
+				command($3());
+				base.jump(ifName, true);
+				command("testforblock %-2:diff% minecraft:chain_command_block -1 {SuccessCount:0}");
+				base.jump(elseName, true);
+
+				base.addFunction(ifName, function()
+				{
+					$5();
+					base.jump(endName, false);
+				});
+				base.addFunction(elseName, function()
+				{
+					$7();
+					base.jump(endName, false);
+				});
+
+				block(options.splitterBlock);
+				base.addLabel(endName);
+			}
+		}
+	| 'IF' '(' ValidateExpression ')' SingleStatement
+		{
+			$$ = function()
+			{
+				var name = util.nextName("if");
+				var endName = name + "end";
+
+				command($3());
+				base.jump(name, true);
+				command("testforblock %-2:diff% minecraft:chain_command_block -1 {SuccessCount:0}");
+				base.jump(endName, true);
+
+				base.addFunction(name, function()
+				{
+					$5();
+					base.jump(endName, false);
+				});
+
+				block(options.splitterBlock);
+				base.addLabel(endName);
 			};
 		}
 	;
 
 WhileStatement
-	: ModifierList 'WHILE' '(' ValidateExpression ')' SingleStatement
+	: 'WHILE' '(' ValidateExpression ')' SingleStatement
 		{
-			checkModifiers($1, ["async", "static"], "while loops", @1);
 			$$ = function()
 			{
-				var stmt = new whileStatement($4, $6, true);
-				runModifiedStatement(stmt, $1);
+				var name = util.nextName("while");
+				var checkName = name + "check";
+				var endName = name + "end";
+
+				base.jump(checkName);
+
+				base.addFunction(name, function()
+				{
+					$5();
+
+					base.addLabel(checkName);
+					command($3());
+					base.jump(name, true);
+					command("testforblock %-2:diff% minecraft:chain_command_block -1 {SuccessCount:0}");
+					base.jump(endName, true);
+				});
+
+				block(options.splitterBlock);
+				base.addLabel(endName);
 			};
 		}
 	;
 
 DoWhileStatement
-	: ModifierList 'DO' SingleStatement 'WHILE' '(' ValidateExpression ')'
+	: 'DO' SingleStatement 'WHILE' '(' ValidateExpression ')'
 		{
-			checkModifiers($1, ["async", "static"], "do-while loops", @1);
 			$$ = function()
 			{
-				var stmt = new whileStatement($6, $3, false);
-				runModifiedStatement(stmt, $1);
-			}
+				var name = util.nextName("do");
+				var endName = name + "end";
+
+				base.addFunction(name, function()
+				{
+					$2();
+
+					command($5());
+					base.jump(name, true);
+					command("testforblock %-2:diff% minecraft:chain_command_block -1 {SuccessCount:0}");
+					base.jump(endName, true);
+				});
+
+				block(options.splitterBlock);
+				base.addLabel(endName);
+			};
 		}
 	;
 
 ForStatement
-	: ModifierList 'FOR' '(' DefinitionStatement ';' ValidateExpression ';' AssignStatement ')' SingleStatement
+	: 'FOR' '(' DefinitionStatement ';' ValidateExpression ';' AssignStatement ')' SingleStatement
 		{
-			checkModifiers($1, ["async", "static"], "for loops", @1);
 			$$ = function()
 			{
-				var stmt = new forStatement($4, $6, $8, $10);
-				runModifiedStatement(stmt, $1);
+				var name = util.nextName("for");
+				var checkName = name + "check";
+				var endName = name + "end";
+
+				$3();
+				base.jump(checkName);
+
+				base.addFunction(name, function()
+				{
+					$9();
+					$7();
+
+					base.addLabel(checkName);
+					command($5());
+					base.jump(name, true);
+					command("testforblock %-2:diff% minecraft:chain_command_block -1 {SuccessCount:0}");
+					base.jump(endName, true);
+				});
+
+				block(options.splitterBlock);
+				base.addLabel(endName);
 			};
 		}
 	;
 
 %%
+
+var vars = {};
+var functions = {};
+var fnReturns = {};
+var util = new (require("./lib/util.js"))(vars, functions);
+var types = require("./lib/types.js");
+var base = require("./lib/base.js");
