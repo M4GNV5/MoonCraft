@@ -77,7 +77,7 @@ Program
 
 StatementList
 	: StatementList Statement StatementSeperator
-		{ $$ = $1.concat($2); }
+		{ $2.line = @2; $$ = $1.concat($2); }
 	|
 		{ $$ = []; }
 	;
@@ -208,9 +208,9 @@ ParameterDefinitionList
 VariableType
 	: 'BOOL_KEYWORD'
 		{
-			$$ = function(startVal)
+			$$ = function(startVal, name)
 			{
-				return new types.Boolean(startVal);
+				return new types.Boolean(startVal, name);
 			};
 			$$.typeName = "Boolean";
 			$$.defaultValue = false;
@@ -226,18 +226,18 @@ VariableType
 		}
 	| 'FLOAT_KEYWORD'
 		{
-			$$ = function(startVal)
+			$$ = function(startVal, name)
 			{
-				return new types.Float(startVal);
+				return new types.Float(startVal, name);
 			};
 			$$.typeName = "Float";
 			$$.defaultValue = 0.0;
 		}
 	| 'STRING_KEYWORD'
 		{
-			$$ = function(startVal)
+			$$ = function(startVal, name)
 			{
-				return new types.String(startVal);
+				return new types.String(startVal, name);
 			};
 			$$.typeName = "String";
 			$$.defaultValue = "";
@@ -371,12 +371,12 @@ ValidateExpression
 		{
 			$$ = function(callback)
 			{
-				var val = $1();
+				var left = $1();
 
 				if(typeof left == 'string')
 					return left;
 
-				checkOperator(left, "isExact", "== true", @1);
+				util.checkOperator(left, "isExact", "== true", @1);
 				return left.isExact(true);
 			};
 		}
@@ -419,7 +419,18 @@ Block
 			$$ = function()
 			{
 				for(var i = 0; i < $2.length; i++)
-					$2[i]();
+				{
+					try
+					{
+						$2[i]();
+					}
+					catch(e)
+					{
+						var msg = e.toString();
+						if(msg.indexOf("at line") == -1)
+							console.log(e.toString() + " at line " + $2[i].line.first_line);
+					}
+				}
 			}
 		}
 	;

@@ -1,0 +1,19 @@
+float pi = 3.14;
+
+for(int radius = 1; radius < 10; radius++)
+{
+	float area = radius;
+	area *= radius;
+	area *= pi;
+
+	for(int i = 0; i < 30; i++)
+	{
+		//wait 1.5 sec
+	}
+}
+
+//radius -> area
+//1 -> 3.14
+//2 -> 12.56
+//...
+//9 -> 254.34

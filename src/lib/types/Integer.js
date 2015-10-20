@@ -1,19 +1,18 @@
-var Naming = require("./../naming.js");
+var naming = require("./../naming.js");
 
 function Integer(startVal, name)
 {
-    this.name = name || Naming.next("int");
+    this.name = name || naming.next("int");
 
-    var startVal = typeof startVal == "object" ? startVal : (parseInt(startVal) || 0);
+    var startVal = typeof startVal.toInteger == "function" ? startVal : (parseInt(startVal) || 0);
     this.set(startVal);
 }
 
-Integer.scoreName = "integer";
-command("scoreboard objectives add " + Integer.scoreName + " dummy Integer");
+Integer.scoreName = scoreName;
 
 Integer.prototype.set = function(val)
 {
-    if(typeof val == "object" && typeof val.toInteger == "function")
+    if(typeof val.toInteger == "function")
         this.operation("=", val.toInteger().name, Integer.scoreName);
     else if(typeof val == "number")
         command(["scoreboard players set", this.name, Integer.scoreName, val].join(" "));

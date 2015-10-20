@@ -5,7 +5,7 @@ String.prototype.format = function()
 {
 	var val = this;
 	for(var i = 0; i < arguments.length; i++)
-		val = val.replace(new RegExp("\\{" + i + "\\}", "g"), arguments[i].toString());
+		val = val.replace(new RegExp("\\{" + i + "\\}", "g"), (arguments[i] || "").toString());
 	return val;
 }
 
@@ -37,7 +37,7 @@ module.exports = (function(vars, functions)
 	{
 		var compatibleTypes = [
 			[types.Boolean, (true).constructor], //bool
-			[types.Integer, (0).constructor], //int, float
+			[types.Integer, types.Float, (0).constructor], //int, float
 			[types.String, ("").constructor] //string
 		]
 
