@@ -1,8 +1,2 @@
-# private script
-src/run_example.bat
-
-#jison output
-src/parser.js
-
 #node modules
-node_modules/
+/src/node_modules/
