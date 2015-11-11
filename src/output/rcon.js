@@ -16,7 +16,7 @@ module.exports = function(blocks, cmdblocks)
         cmds.push(cmd);
     }
 
-    rcon.connect("127.0.0.1", 25575, "hunter2", function()
+    rcon.connect("134.255.229.20", 25575, "supersecretpassword", function()
     {
         function next(i)
         {

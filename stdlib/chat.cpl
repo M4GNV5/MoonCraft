@@ -1,0 +1,9 @@
+int out(int var)
+{
+    js_call("tellraw @a [\"Output: \",{0}]", "format", js_call(var, "toTellrawExtra"))();
+}
+
+int outf(float varf)
+{
+    js_call("tellraw @a [\"Output: \",{0}]", "format", js_call(varf, "toTellrawExtra"))();
+}

@@ -1,9 +1,10 @@
-var naming = require("./../naming.js");
+var nextName = require("./../lib/naming.js");
 
 function Integer(startVal, name)
 {
-    this.name = name || naming.next("int");
+    this.name = name || nextName("int");
 
+    startVal = startVal || 0;
     var startVal = typeof startVal.toInteger == "function" ? startVal : (parseInt(startVal) || 0);
     this.set(startVal);
 }

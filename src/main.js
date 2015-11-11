@@ -1,16 +1,26 @@
-var fs = require("fs");
+GLOBAL.options = {splitterBlock: "air", length: 20, output: "rcon"};
 
-var file = process.argv.slice(2).join(" ");
-if(!file.trim() || !fs.existsSync(file))
+var fs = require("fs");
+var parser = require("luaparse");
+var output = require("./output/" + options.output + ".js");
+var compile = require("./compiler.js");
+
+try
 {
-    console.log("usage: node main.js <file>");
+    var file = process.argv.slice(2).join(" ");
+    if(!file.trim() || !fs.existsSync(file))
+        throw "usage: node main.js <file>";
+
+    var src = fs.readFileSync(file).toString();
+    var ast = parser.parse(src, {locations: true});
+
+    compile(ast, output);
+
+    console.log("done");
+}
+catch(e)
+{
+    console.log(e.toString());
+    throw e;
     process.exit(1);
 }
-
-GLOBAL.options = {splitterBlock: "air", length: 20};
-
-var base = require("./lib/base.js");
-var src = fs.readFileSync(file).toString();
-var run = require("./parser.js").parser.parse(src);
-run();
-base.output(require("./output/rcon.js"));

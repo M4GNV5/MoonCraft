@@ -1,9 +1,0 @@
-string nick = "Notch";
-string type;
-
-if(nick == "Notch")
-	type = "the creator!";
-else
-	type = "just a player.";
-
-//tellraw(nick, " is ", type);

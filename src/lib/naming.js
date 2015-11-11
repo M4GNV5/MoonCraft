@@ -1,6 +1,6 @@
 var names = {};
 
-exports.next = function(name)
+module.exports = function(name)
 {
     names[name] = names[name] + 1 || 0;
     return name + names[name];

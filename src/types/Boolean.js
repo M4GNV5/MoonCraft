@@ -1,9 +1,9 @@
-var naming = require("./../naming.js");
+var nextName = require("./../lib/naming.js");
 var Integer = require("./Integer.js");
 
 function Boolean(startVal, name)
 {
-    this.name = name || naming.next("bool");
+    this.name = name || nextName("bool");
 
     if(startVal instanceof Boolean)
         startVal = startVal.base;

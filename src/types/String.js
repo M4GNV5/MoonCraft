@@ -1,10 +1,10 @@
-var naming = require("./../naming.js");
+var nextName = require("./../lib/naming.js");
 
 var nextId = 1;
 
 function String(startVal, name)
 {
-    this.name = name || naming.next("string");
+    this.name = name || nextName("string");
     startVal = startVal || "";
     var _startVal = startVal.toString() || name;
 

@@ -1,9 +1,9 @@
-var naming = require("./../naming.js");
+var nextName = require("./../lib/naming.js");
 var Integer = require("./Integer.js");
 
 function Float(startVal, name)
 {
-    this.name = name || naming.next("float");
+    this.name = name || nextName("float");
 
     if(startVal instanceof Float)
     {
@@ -16,7 +16,7 @@ function Float(startVal, name)
     }
     else if(typeof startVal == "number")
     {
-        startVal = Math.round(startVal * Float.accuracy);
+        startVal = Math.floor(startVal * Float.accuracy);
     }
     else
     {
@@ -32,7 +32,7 @@ Float.accuracy = Math.pow(10, Float.accuracy);
 
 function convertStatic(val)
 {
-    var _val = Math.round(val * Float.accuracy);
+    var _val = Math.floor(val * Float.accuracy);
     return _val;
 }
 
@@ -181,8 +181,15 @@ Float.prototype.clone = function(cloneName)
 
 Float.prototype.toTellrawExtra = function()
 {
-    var val = this.toInteger();
-    return {score: {objective: Integer.scoreName, name: val.name}};
+    var left = this.base.clone();
+    var right = this.base.clone();
+    left.divide(Float.accuracy);
+    right.mod(Float.accuracy);
+
+    var leftExtra = {score: {objective: Integer.scoreName, name: left.name}};
+    var rightExtra = {score: {objective: Integer.scoreName, name: right.name}};
+
+    return JSON.stringify(leftExtra) + ",\".\"," + JSON.stringify(rightExtra);
 }
 
 Float.prototype.isExact = function(val)
