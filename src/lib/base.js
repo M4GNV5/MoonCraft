@@ -52,13 +52,16 @@ exports.addFunction = function(label, fn)
         throw "cannot use label " + label + " twice";
 
     var _blocks = currBlocks;
+    var _createLabel = createLabel;
     currBlocks = [];
+    createLabel = [];
 
     exports.addLabel(label);
     fn();
 
     functions[label] = currBlocks;
     currBlocks = _blocks;
+    createLabel = _createLabel;
 }
 
 /*exports.newFunction = function(label)

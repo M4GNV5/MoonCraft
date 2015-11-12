@@ -8,8 +8,15 @@ module.exports = function(ast, output)
 {
     for(var i = 0; i < ast.body.length; i++)
     {
+        if(ast.body[i].type == "FunctionDeclaration")
+            compileFunction(ast.body[i]);
+    }
+
+    for(var i = 0; i < ast.body.length; i++)
+    {
         compileStatement(ast.body[i]);
     }
+
     base.output(output);
 }
 
@@ -24,12 +31,25 @@ function throwError(message, loc)
     throw message + locStr;
 }
 
-function compileStatementList(stmts)
+function compileFunction(stmt)
 {
-    for(var i = 0; i < stmts.length; i++)
+    if(stmt.parameters.length > 0)
+        throwError("Function parameter currently not supported", stmt.loc);
+
+    var bodyName;
+
+    var func = function()
     {
-        compileStatement(stmts[i]);
-    }
+        if(arguments.length > 0)
+            throwError("Function parameter currently not supported", stmt.loc);
+
+        if(!bodyName)
+            bodyName = compileBody(stmt.body, base.ret);
+
+        base.rjump(bodyName);
+    };
+
+    scope.set(stmt.identifier.name, func);
 }
 
 function compileBody(body, end)
@@ -45,6 +65,14 @@ function compileBody(body, end)
             end();
     });
     return label;
+}
+
+function compileStatementList(stmts)
+{
+    for(var i = 0; i < stmts.length; i++)
+    {
+        compileStatement(stmts[i]);
+    }
 }
 
 function compileStatement(stmt)
@@ -127,6 +155,18 @@ function trueify(val)
     }
 }
 
+function createRuntimeVar(val, name)
+{
+    if(typeof val == "boolean" || val.constructor == types.Boolean)
+        return new types.Boolean(val, name);
+    else if((typeof val == "number" && parseInt(val) == val) || val.constructor == types.Integer)
+        return new types.Integer(val, name);
+    else if(typeof val == "number" || val.constructor == types.Float)
+        return new types.Float(val, name);
+    else if(typeof val == "string" || val.constructor == types.String)
+        return new types.String(val, name);
+}
+
 var statements = {};
 var expressions = {};
 
@@ -145,22 +185,23 @@ statements["AssignmentStatement"] = function(stmt)
     if(!oldVal)
     {
         var name = nextName(key);
-
-        if(typeof newVal == "boolean" || newVal.constructor == types.Boolean)
-            oldVal = new types.Boolean(newVal, name);
-        else if((typeof newVal == "number" && parseInt(newVal) == newVal) || newVal.constructor == types.Integer)
-            oldVal = new types.Integer(newVal, name);
-        else if(typeof newVal == "number" || newVal.constructor == types.Float)
-            oldVal = new types.Float(newVal, name);
-        else if(typeof newVal == "string" || newVal.constructor == types.String)
-            oldVal = new types.String(newVal, name);
-
+        oldVal = createRuntimeVar(newVal, name);
         scope.set(key, oldVal);
     }
     else
     {
         oldVal.set(newVal);
     }
+}
+
+statements["FunctionDeclaration"] = function(stmt)
+{
+    //do nothing
+}
+
+statements["CallStatement"] = function(stmt)
+{
+    compileExpression(stmt.expression);
 }
 
 statements["IfStatement"] = function(stmt)
@@ -204,7 +245,7 @@ statements["IfStatement"] = function(stmt)
 
             var cmd = trueify(expr);
             command(cmd, true);
-            
+
             labels.push(label);
 
             var bodyLabel = compileBody(clauses[i].body, base.jump.bind(base, endLabel));
@@ -227,7 +268,58 @@ statements["IfStatement"] = function(stmt)
     base.addLabel(endLabel);
 }
 
+statements["WhileStatement"] = function(stmt)
+{
+    var bodyLabel = nextName("while");
+    var checkLabel = bodyLabel + "check";
+    var endLabel = bodyLabel + "end";
+
+    base.jump(checkLabel);
+    block(options.splitterBlock);
+
+    base.addFunction(bodyLabel, function()
+    {
+        compileStatementList(stmt.body);
+
+        var condition = compileExpression(stmt.condition);
+        base.addLabel(checkLabel);
+        command(trueify(condition));
+        base.jump(bodyLabel, true);
+
+        command("testforblock %-2:diff% minecraft:chain_command_block -1 {SuccessCount:0}");
+        base.jump(endLabel, true);
+    });
+    base.addLabel(endLabel);
+}
+
+statements["RepeatStatement"] = function(stmt)
+{
+    var bodyLabel = nextName("repeat");
+    var endLabel = bodyLabel + "end";
+
+    base.addLabel(bodyLabel);
+
+    scope.increase();
+    compileStatementList(stmt.body);
+
+    var condition = compileExpression(stmt.condition);
+    command(trueify(condition));
+    base.jump(bodyLabel, true);
+
+    command("testforblock %-2:diff% minecraft:chain_command_block -1 {SuccessCount:0}");
+    base.jump(endLabel, true);
+
+    scope.decrease();
+    block(options.splitterBlock);
+    base.addLabel(endLabel);
+}
+
 expressions["NumericLiteral"] = function(expr)
+{
+    return expr.value;
+}
+
+expressions["BooleanLiteral"] = function(expr)
 {
     return expr.value;
 }
@@ -238,6 +330,19 @@ expressions["Identifier"] = function(expr)
     if(!val)
         throwError("use of undefined variable " + expr.name, expr.loc);
     return val;
+}
+
+expressions["CallExpression"] = function(expr)
+{
+    var base = compileExpression(expr.base);
+    var args = [];
+    for(var i = 0; i < expr.arguments.length; i++)
+        args[i] = compileExpression(expr.arguments[i]);
+
+    if(typeof base != "function")
+        throwError(base.constructor.name + " is not a function", expr.loc);
+
+    return base.apply(undefined, args);
 }
 
 expressions["BinaryExpression"] = function(expr)
@@ -312,7 +417,8 @@ expressions["BinaryExpression"] = function(expr)
         var op = runtimeOps[operator];
 
         checkOperator(left, "clone", "clone", expr.loc);
-        var clone = left.clone();
+        var clone = left.isClone ? left : left.clone();
+        clone.isClone = true;
 
         if(typeof op == "string")
         {
@@ -336,7 +442,8 @@ expressions["BinaryExpression"] = function(expr)
         if(typeof op == "string")
         {
             checkOperator(_left, "clone", "clone", expr.loc);
-            var clone = _left.clone();
+            var clone = _left.isClone ? _left : _left.clone();
+            clone.isClone = true;
 
             checkOperator(clone, op, operator, expr.loc);
             clone[op](_right);

@@ -3,9 +3,9 @@ function Scope()
     this.stack = [{}];
 }
 
-Scope.prototype.increase = function()
+Scope.prototype.increase = function(val)
 {
-    this.stack.push({});
+    this.stack.push(val || {});
 }
 
 Scope.prototype.decrease = function()
@@ -13,7 +13,7 @@ Scope.prototype.decrease = function()
     if(this.stack.length == 1)
         throw "cannot go below global in scope";
 
-    return this.stack.splice(this.stack.length - 1, 1);
+    return this.stack.splice(this.stack.length - 1, 1)[0];
 }
 
 Scope.prototype.current = function()

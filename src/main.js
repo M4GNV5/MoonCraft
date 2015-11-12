@@ -13,6 +13,7 @@ try
 
     var src = fs.readFileSync(file).toString();
     var ast = parser.parse(src, {locations: true});
+    fs.writeFileSync("dump.json", JSON.stringify(ast, undefined, 4));
 
     compile(ast, output);
 
