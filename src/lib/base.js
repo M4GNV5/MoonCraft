@@ -44,18 +44,6 @@ exports.addLabel = function addLabel(name)
     createLabel.push(name);
 }
 
-exports.addLabelAt = function addLabelAt(name, offset)
-{
-    var block = currBlocks[currBlocks.length - 1 - offset];
-    console.dir(currBlocks);
-    console.log(currBlocks.length - 1 + offset);
-    console.dir(block);
-    if(!block || !block.label)
-        throw "invalid addLabelAt - this is probably a error within CPL";
-
-    block.label.push(name);
-}
-
 exports.addFunction = function(label, fn)
 {
     if(functions[label] == fn)

@@ -28,7 +28,13 @@ Scope.prototype.set = function(key, val)
 
 Scope.prototype.get = function(key)
 {
-    return this.current()[key];
+    for(var i = this.stack.length - 1; i >= 0; i--)
+    {
+        if(this.stack[i].hasOwnProperty(key))
+        {
+            return this.stack[i][key];
+        }
+    }
 }
 
 Scope.prototype.setGlobal = function(key, val)

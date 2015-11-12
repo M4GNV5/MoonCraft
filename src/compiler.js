@@ -24,17 +24,25 @@ function throwError(message, loc)
     throw message + locStr;
 }
 
-function compileStatementList(body)
+function compileStatementList(stmts)
 {
-    var label = nextName("stmtList");
+    for(var i = 0; i < stmts.length; i++)
+    {
+        compileStatement(stmts[i]);
+    }
+}
+
+function compileBody(body, end)
+{
+    var label = nextName("body");
     base.addFunction(label, function()
     {
         scope.increase();
-        for(var i = 0; i < body.length; i++)
-        {
-            compileStatement(body[i]);
-        }
+        compileStatementList(body);
         scope.decrease();
+
+        if(end)
+            end();
     });
     return label;
 }
@@ -87,6 +95,38 @@ function checkOperator(val, op, opLabel, loc)
         throwError("Type " + val.constructor.name + " does not support operator " + opLabel, loc);
 }
 
+function trueify(val)
+{
+    var label = nextName("trueify");
+    if(typeof val == "string")
+    {
+        return val;
+    }
+    else if(typeof val != "object")
+    {
+        return !!val ? "testfor @e" : "falsy: " + val.toString();
+    }
+    else if(val instanceof tyes.Boolean)
+    {
+        return val.isExact(true);
+    }
+    else if(val instanceof types.String)
+    {
+        base.addLabel(label);
+        base.command(val.isExact(""));
+
+        return "testforblock %" + label + ":diff% minecraft:chain_command_block -1 {SuccessCount:0}";
+    }
+    else if(val.toInteger)
+    {
+        var fn = val.isExact ? val.isExact : val.toInteger().isExact;
+        base.addLabel(label);
+        base.command(fn(0));
+
+        return "testforblock %" + label + ":diff% minecraft:chain_command_block -1 {SuccessCount:0}";
+    }
+}
+
 var statements = {};
 var expressions = {};
 
@@ -112,7 +152,7 @@ statements["AssignmentStatement"] = function(stmt)
             oldVal = new types.Integer(newVal, name);
         else if(typeof newVal == "number" || newVal.constructor == types.Float)
             oldVal = new types.Float(newVal, name);
-        else if(typeof newVal == "boolean" || newVal.constructor == types.String)
+        else if(typeof newVal == "string" || newVal.constructor == types.String)
             oldVal = new types.String(newVal, name);
 
         scope.set(key, oldVal);
@@ -127,30 +167,54 @@ statements["IfStatement"] = function(stmt)
 {
     var clauses = stmt.clauses;
 
-    var ifLabel = nextName("if");
+    var labels;
+    var endLabel = nextName("ifend");
+
+    function checkPrevious()
+    {
+        command("testforblock %" + labels[0] + ":diff% minecraft:chain_command_block -1 {SuccessCount:0}");
+        for(var i = 1; i < labels.length; i++)
+            command("testforblock %" + labels[i] + ":diff% minecraft:chain_command_block -1 {SuccessCount:0}", true);
+    }
+
     for(var i = 0; i < clauses.length; i++)
     {
-        if(clauses[i].type == "IfClause")
-        {
-            compileExpression(clauses[i].condition);
-            base.addLabelAt(ifLabel, -1);
+        var type = clauses[i].type;
 
-            var bodyLabel = compileStatementList(clauses[i].body);
+        if(type == "IfClause")
+        {
+            var expr = compileExpression(clauses[i].condition);
+
+            var label = nextName("if");
+            labels = [label];
+            base.addLabel(label);
+            command(trueify(expr));
+
+            var bodyLabel = compileBody(clauses[i].body, base.jump.bind(base, endLabel));
+
             base.jump(bodyLabel, true);
         }
         else if(type == "ElseifClause")
         {
-            compileExpression(clauses[i].condition);
-            command("testforblock %" + ifLabel + "%:diff minecraft:chain_command_block -1 {SuccessCount:0}", true);
+            var expr = compileExpression(clauses[i].condition);
 
-            var bodyLabel = compileStatementList(clauses[i].body);
+            var label = nextName("elif");
+            checkPrevious();
+            base.addLabel(label);
+
+            var cmd = trueify(expr);
+            command(cmd, true);
+            
+            labels.push(label);
+
+            var bodyLabel = compileBody(clauses[i].body, base.jump.bind(base, endLabel));
             base.jump(bodyLabel, true);
         }
         else if(type == "ElseClause")
         {
-            command("testforblock %" + ifLabel + "%:diff minecraft:chain_command_block -1 {SuccessCount:0}", true);
+            checkPrevious();
 
-            var bodyLabel = compileStatementList(clauses[i].body);
+            var bodyLabel = compileBody(clauses[i].body, base.jump.bind(base, endLabel));
             base.jump(bodyLabel, true);
         }
         else
@@ -158,6 +222,9 @@ statements["IfStatement"] = function(stmt)
             throwError("unsupported clause " + clauses[i].type, stmt.loc);
         }
     }
+
+    block(options.splitterBlock);
+    base.addLabel(endLabel);
 }
 
 expressions["NumericLiteral"] = function(expr)
@@ -204,33 +271,35 @@ expressions["BinaryExpression"] = function(expr)
         "==": function(a, b)
         {
             checkOperator(a, "isExact", operator, expr.loc);
-            a.isExact(b);
+            return a.isExact(b);
+        },
+        "~=": function(a, b)
+        {
+            checkOperator(a, "isExact", operator, expr.loc);
+            var label = nextName("not");
+            base.addLabel(label);
+            command(a.isExact(b));
+            return "testforblock %" + label + ":diff% minecraft:chain_command_block -1 {SuccessCount:0}";
         },
         ">": function(a, b)
         {
             checkOperator(a, "isBetweenEx", operator, expr.loc);
-            a.isBetweenEx(undefined, b);
+            return a.isBetweenEx(b, undefined);
         },
         "<": function(a, b)
         {
             checkOperator(a, "isBetweenEx", operator, expr.loc);
-            a.isBetweenEx(b, undefined);
+            return a.isBetweenEx(undefined, b);
         },
         ">=": function(a, b)
         {
             checkOperator(a, "isBetween", operator, expr.loc);
-            a.isBetween(undefined, b);
+            return a.isBetween(b, undefined);
         },
         "<=": function(a, b)
         {
             checkOperator(a, "isBetween", operator, expr.loc);
-            a.isBetween(b, undefined);
-        },
-        "!=": function(a, b)
-        {
-            checkOperator(a, "isExact", operator, expr.loc);
-            a.isExact(b);
-            command("testforblock %-1:diff% minecraft:chain_command_block -1 {SuccessCount:0}");
+            return a.isBetween(undefined, b);
         }
     }
 
@@ -254,7 +323,7 @@ expressions["BinaryExpression"] = function(expr)
         {
             checkOperator(left, "remove", "-", expr.loc);
             clone.remove(right);
-            op(clone, 0);
+            return op(clone, 0);
         }
         return clone;
     }
@@ -263,18 +332,18 @@ expressions["BinaryExpression"] = function(expr)
         var _left = typeof left == "object" ? left : right;
         var _right = typeof right == "object" ? left : right;
 
-        checkOperator(_left, "clone", "clone", expr.loc);
-        var clone = _left.clone();
-
         var op = runtimeOps[operator];
         if(typeof op == "string")
         {
+            checkOperator(_left, "clone", "clone", expr.loc);
+            var clone = _left.clone();
+
             checkOperator(clone, op, operator, expr.loc);
             clone[op](_right);
         }
         else
         {
-            op(clone, _right);
+            return op(_left, _right);
         }
 
         return clone;
