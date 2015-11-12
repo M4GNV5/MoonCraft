@@ -1,9 +1,19 @@
 GLOBAL.options = {splitterBlock: "air", length: 20, output: "rcon"};
 
 var fs = require("fs");
+var path = require("path");
 var parser = require("luaparse");
+var base = require("./lib/base.js");
 var output = require("./output/" + options.output + ".js");
 var compile = require("./compiler.js");
+
+String.prototype.format = function()
+{
+	var val = this;
+	for(var i = 0; i < arguments.length; i++)
+		val = val.replace(new RegExp("\\{" + i + "\\}", "g"), (arguments[i] || "").toString());
+	return val;
+};
 
 try
 {
@@ -15,7 +25,9 @@ try
     var ast = parser.parse(src, {locations: true});
     fs.writeFileSync("dump.json", JSON.stringify(ast, undefined, 4));
 
-    compile(ast, output);
+    compile(ast, path.dirname(file));
+
+	base.output(output);
 
     console.log("done");
 }

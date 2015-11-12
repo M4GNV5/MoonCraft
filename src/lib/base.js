@@ -15,6 +15,13 @@ exports.command = GLOBAL.command = function command(cmd, conditional)
         createLabel = [];
 }
 
+exports.unshiftCommand = function unshiftCommand(cmd, conditional)
+{
+    conditional = !!conditional;
+    var data = {type: "command", command: cmd, conditional: conditional, label: createLabel.slice(0)};
+    currBlocks.unshift(data);
+}
+
 exports.block = GLOBAL.block = function block(tagName, data)
 {
     currBlocks.push({type: "block", tagName: tagName, data: data || 0});

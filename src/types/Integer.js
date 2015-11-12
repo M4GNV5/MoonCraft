@@ -9,7 +9,9 @@ function Integer(startVal, name)
     this.set(startVal);
 }
 
-Integer.scoreName = scoreName;
+Integer.statics = [];
+
+Integer.scoreName = "cplVars";
 
 Integer.prototype.set = function(val)
 {
@@ -78,7 +80,8 @@ Integer.prototype.operation = function(op, otherName, otherScore)
 
 Integer.prototype.staticOperation = function(op, val)
 {
-    command(["scoreboard players set", "static" + val, Integer.scoreName, val].join(" "));
+    if(Integer.statics.indexOf(val) == -1)
+        Integer.statics.push(val);
     this.operation(op, "static" + val.toString(), Integer.scoreName);
 }
 

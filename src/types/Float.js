@@ -181,8 +181,8 @@ Float.prototype.clone = function(cloneName)
 
 Float.prototype.toTellrawExtra = function()
 {
-    var left = this.base.clone();
-    var right = this.base.clone();
+    var left = this.base.clone(this.name + "left");
+    var right = this.base.clone(this.name + "right");
     left.divide(Float.accuracy);
     right.mod(Float.accuracy);
 

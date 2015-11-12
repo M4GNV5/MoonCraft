@@ -1,11 +1,14 @@
 var base = require("./lib/base.js");
 var types = require("./lib/types.js");
 var nextName = require("./lib/naming.js");
+var addBaseLib = require("./lib/baselib.js");
 var Scope = require("./lib/scope.js");
 var scope = new Scope();
 
-module.exports = function(ast, output)
+module.exports = function(ast, path)
 {
+    addBaseLib(scope, path);
+
     for(var i = 0; i < ast.body.length; i++)
     {
         if(ast.body[i].type == "FunctionDeclaration")
@@ -17,7 +20,11 @@ module.exports = function(ast, output)
         compileStatement(ast.body[i]);
     }
 
-    base.output(output);
+    var Integer = types.Integer;
+    for(var i = 0; i < Integer.statics.length; i++)
+        base.unshiftCommand(["scoreboard players set", "static" + Integer.statics[i], Integer.scoreName, Integer.statics[i]].join(" "));
+
+    base.unshiftCommand("scoreboard objectives add " + Integer.scoreName + " dummy CPL Variables");
 }
 
 function throwError(message, loc)
@@ -155,11 +162,11 @@ function trueify(val)
     }
 }
 
-function createRuntimeVar(val, name)
+function createRuntimeVar(val, name, raw)
 {
     if(typeof val == "boolean" || val.constructor == types.Boolean)
         return new types.Boolean(val, name);
-    else if((typeof val == "number" && parseInt(val) == val) || val.constructor == types.Integer)
+    else if((typeof val == "number" && Math.round(val) == val) || val.constructor == types.Integer)
         return new types.Integer(val, name);
     else if(typeof val == "number" || val.constructor == types.Float)
         return new types.Float(val, name);
@@ -314,15 +321,14 @@ statements["RepeatStatement"] = function(stmt)
     base.addLabel(endLabel);
 }
 
-expressions["NumericLiteral"] = function(expr)
+function staticLiteral(expr)
 {
     return expr.value;
 }
 
-expressions["BooleanLiteral"] = function(expr)
-{
-    return expr.value;
-}
+expressions["BooleanLiteral"] = staticLiteral;
+expressions["NumericLiteral"] = staticLiteral;
+expressions["StringLiteral"] = staticLiteral;
 
 expressions["Identifier"] = function(expr)
 {
