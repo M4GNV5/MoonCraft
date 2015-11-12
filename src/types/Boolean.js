@@ -15,14 +15,14 @@ function Boolean(startVal, name)
     this.base = new Integer(startVal, name);
 }
 
-Boolean.prototype.set = function(val)
+Boolean.prototype.set = function(val, conditional)
 {
     if(val instanceof Boolean)
-        this.base.set(val.base);
+        this.base.set(val.base, conditional);
     else if(typeof val.toInteger == "function")
-        this.base.set(val);
+        this.base.set(val, conditional);
     else if(typeof val == "boolean")
-        this.base.set(val ? 1 : 0);
+        this.base.set(val ? 1 : 0, conditional);
     else
         throw "Cannot assing '" + val.constructor.name + "' to a Boolean";
 }

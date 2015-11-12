@@ -13,76 +13,76 @@ Integer.statics = [];
 
 Integer.scoreName = "cplVars";
 
-Integer.prototype.set = function(val)
+Integer.prototype.set = function(val, conditional)
 {
     if(typeof val.toInteger == "function")
-        this.operation("=", val.toInteger().name, Integer.scoreName);
+        this.operation("=", val.toInteger().name, Integer.scoreName, conditional);
     else if(typeof val == "number")
-        command(["scoreboard players set", this.name, Integer.scoreName, val].join(" "));
+        command(["scoreboard players set", this.name, Integer.scoreName, val].join(" "), conditional);
     else
         throw "Cannot assing '" + val.constructor.name + "' to an Integer";
 }
 
-Integer.prototype.add = function(val)
+Integer.prototype.add = function(val, conditional)
 {
     if(typeof val == "object" && typeof val.toInteger == "function")
-        this.operation("+=", val.toInteger().name, Integer.scoreName);
+        this.operation("+=", val.toInteger().name, Integer.scoreName, conditional);
     else if(typeof val == "number")
-        command(["scoreboard players add", this.name, Integer.scoreName, val].join(" "));
+        command(["scoreboard players add", this.name, Integer.scoreName, val].join(" "), conditional);
     else
         throw "Cannot add '" + val.constructor.name + "' to an Integer";
 }
 
-Integer.prototype.remove = function(val)
+Integer.prototype.remove = function(val, conditional)
 {
     if(typeof val == "object" && typeof val.toInteger == "function")
-        this.operation("-=", val.toInteger().name, Integer.scoreName);
+        this.operation("-=", val.toInteger().name, Integer.scoreName, conditional);
     else if(typeof val == "number")
-        command(["scoreboard players remove", this.name, Integer.scoreName, val].join(" "));
+        command(["scoreboard players remove", this.name, Integer.scoreName, val].join(" "), conditional);
     else
         throw "Cannot remove '" + val.constructor.name + "' to an Integer";
 }
 
-Integer.prototype.multiplicate = function(val)
+Integer.prototype.multiplicate = function(val, conditional)
 {
     if(typeof val == "object" && typeof val.toInteger == "function")
-        this.operation("*=", val.toInteger().name, Integer.scoreName);
+        this.operation("*=", val.toInteger().name, Integer.scoreName, conditional);
     else if(typeof val == "number")
-        this.staticOperation("*=", val);
+        this.staticOperation("*=", val, conditional);
     else
         throw "Cannot multiplicate '" + val.constructor.name + "' with an Integer";
 }
 
-Integer.prototype.divide = function(val)
+Integer.prototype.divide = function(val, conditional)
 {
     if(typeof val == "object" && typeof val.toInteger == "function")
-        this.operation("/=", val.toInteger().name, Integer.scoreName);
+        this.operation("/=", val.toInteger().name, Integer.scoreName, conditional);
     else if(typeof val == "number")
-        this.staticOperation("/=", val);
+        this.staticOperation("/=", val, conditional);
     else
         throw "Cannot divide Integer through '" + val.constructor.name + "'";
 }
 
-Integer.prototype.mod = function(val)
+Integer.prototype.mod = function(val, conditional)
 {
     if(typeof val == "object" && typeof val.toInteger == "function")
-        this.operation("%=", val.toInteger().name, Integer.scoreName);
+        this.operation("%=", val.toInteger().name, Integer.scoreName, conditional);
     else if(typeof val == "number")
-        this.staticOperation("%=", val);
+        this.staticOperation("%=", val, conditional);
     else
         throw "Cannot divide Integer through '" + val.constructor.name + "'";
 }
 
-Integer.prototype.operation = function(op, otherName, otherScore)
+Integer.prototype.operation = function(op, otherName, otherScore, conditional)
 {
-    command(["scoreboard players operation", this.name, Integer.scoreName, op, otherName, otherScore].join(" "));
+    command(["scoreboard players operation", this.name, Integer.scoreName, op, otherName, otherScore].join(" "), conditional);
 }
 
-Integer.prototype.staticOperation = function(op, val)
+Integer.prototype.staticOperation = function(op, val, conditional)
 {
     if(Integer.statics.indexOf(val) == -1)
         Integer.statics.push(val);
-    this.operation(op, "static" + val.toString(), Integer.scoreName);
+    this.operation(op, "static" + val.toString(), Integer.scoreName, conditional);
 }
 
 Integer.prototype.toInteger = function()
