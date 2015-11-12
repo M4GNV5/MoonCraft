@@ -39,7 +39,7 @@ Boolean.prototype.clone = function(cloneName)
 
 Boolean.prototype.toTellrawExtra = function()
 {
-    return {score: {objective: Integer.scoreName, name: this.name}};
+    return JSON.stringify({score: {objective: Integer.scoreName, name: this.name}});
 }
 
 Boolean.prototype.isExact = function(val)

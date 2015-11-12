@@ -28,7 +28,7 @@ String.prototype.set = function(val)
 
 String.prototype.toTellrawExtra = function()
 {
-    return {selector: this.selector};
+    return JSON.stringify({selector: this.selector});
 }
 
 String.prototype.isExact = function(val)

@@ -97,7 +97,7 @@ Integer.prototype.clone = function(cloneName)
 
 Integer.prototype.toTellrawExtra = function()
 {
-    return {score: {objective: Integer.scoreName, name: this.name}};
+    return JSON.stringify({score: {objective: Integer.scoreName, name: this.name}});
 }
 
 Integer.prototype.isExact = function(val)
