@@ -1,14 +1,13 @@
-a = 42
-b = 3 * 7 + a % 9
+import("./../stdlib/chat.js")
 
-if b < 0 then
-    --integer overflow
-    b = 42
-elseif b == 0 then
-    --wut?
-    b = 666
-else
-    result = b
+radius = 1
+pi = 3.14
+
+tellraw("Circle circumference and area for radius 1 to 19")
+while radius < 20 do
+    area = pi * radius * radius
+    circumference = pi * 2 * radius
+
+    tellraw("r = ", radius, " C = ", circumference, " A = ", area)
+    radius = radius + 1
 end
-
-result = 42
