@@ -2,7 +2,7 @@
 Lua to commandblock compiler
 
 ##Video
-![video demenstartion](http://giant.gfycat.com/ZestyTenseBufeo.gif)
+[![demo video](http://giant.gfycat.com/ZestyTenseBufeo.gif)](http://gfycat.com/ZestyTenseBufeo)
 
 ##Example
 ```lua
