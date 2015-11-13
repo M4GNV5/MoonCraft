@@ -5,9 +5,8 @@ speed = 8 --m/s
 
 working = true
 direction = 0   -- 0=z+ 1=x- 2=z- 3=x+
-rail = -1       -- 0x<4 bit rail type><4 bit rail direction>
+rail = -1
 totalCount = 0
-goldenCount = 0
 
 
 command("give @p minecraft:armor_stand 1 0 {EntityTag:{CustomName:train}}")
@@ -30,46 +29,40 @@ command("execute @e[type=ArmorStand,name=train] ~ ~ ~ summon ArmorStand ~ ~ ~ {C
 
 while working do
 
+    totalCount = totalCount + 1
+
     if "execute @e[type=ArmorStand,name=train] ~ ~ ~ testforblock ~ ~ ~ minecraft:rail 0" then
-        rail = 0x00
+        rail = 0
     elseif "execute @e[type=ArmorStand,name=train] ~ ~ ~ testforblock ~ ~ ~ minecraft:rail 1" then
-        rail = 0x01
+        rail = 1
     elseif "execute @e[type=ArmorStand,name=train] ~ ~ ~ testforblock ~ ~ ~ minecraft:golden_rail 0" then
-        rail = 0x10
+        rail = 0
     elseif "execute @e[type=ArmorStand,name=train] ~ ~ ~ testforblock ~ ~ ~ minecraft:golden_rail 1" then
-        rail = 0x11
+        rail = 1
     elseif "execute @e[type=ArmorStand,name=train] ~ ~ ~ testforblock ~ ~ ~ minecraft:golden_rail 8" then
-        rail = 0x10
+        rail = 0 --powered straight rail
     elseif "execute @e[type=ArmorStand,name=train] ~ ~ ~ testforblock ~ ~ ~ minecraft:golden_rail 9" then
-        rail = 0x11
+        rail = 1 --powered straight rail
     elseif "execute @e[type=ArmorStand,name=train] ~ ~ ~ testforblock ~ ~ ~ minecraft:rail 6" then
-        rail = 0x06
+        rail = 6
     elseif "execute @e[type=ArmorStand,name=train] ~ ~ ~ testforblock ~ ~ ~ minecraft:rail 7" then
-        rail = 0x07
+        rail = 7
     elseif "execute @e[type=ArmorStand,name=train] ~ ~ ~ testforblock ~ ~ ~ minecraft:rail 8" then
-        rail = 0x08
+        rail = 8
     elseif "execute @e[type=ArmorStand,name=train] ~ ~ ~ testforblock ~ ~ ~ minecraft:rail 9" then
-        rail = 0x09
+        rail = 9
     else
         working = false
         direction = -1
     end
 
-    railType = rail / 16
-    railDirection = rail % 16
-
-    if railType == 1 then
-        goldenCount = goldenCount + 1
-    end
-    totalCount = totalCount + 1
-
-    if direction == 1 and railDirection == 6 or direction == 3 and railDirection == 7 then
+    if direction == 1 and rail == 6 or direction == 3 and rail == 7 then
         direction = 0
-    elseif direction == 2 and railDirection == 7 or direction == 0 and railDirection == 8 then
+    elseif direction == 2 and rail == 7 or direction == 0 and rail == 8 then
         direction = 1
-    elseif direction == 3 and railDirection == 8 or direction == 1 and railDirection == 9 then
+    elseif direction == 3 and rail == 8 or direction == 1 and rail == 9 then
         direction = 2
-    elseif direction == 0 and railDirection == 9 or direction == 2 and railDirection == 6 then
+    elseif direction == 0 and rail == 9 or direction == 2 and rail == 6 then
         direction = 3
     end
 
