@@ -5,6 +5,8 @@ var addBaseLib = require("./lib/baselib.js");
 var Scope = require("./lib/scope.js");
 var scope = new Scope();
 
+var fnReturn = new types[options.returnType](0, "retVal");
+
 module.exports = function(ast, path)
 {
     addBaseLib(scope, path);
@@ -40,31 +42,60 @@ function throwError(message, loc)
 
 function compileFunction(stmt)
 {
-    if(stmt.parameters.length > 0)
-        throwError("Function parameter currently not supported", stmt.loc);
-
+    var funcName = stmt.identifier.name;
     var bodyName;
+
+    scope.increase();
+    var funcScope = scope.decrease();
+
+    var typeSignature = [];
 
     var func = function()
     {
-        if(arguments.length > 0)
-            throwError("Function parameter currently not supported", stmt.loc);
+        if(stmt.parameters.length != arguments.length)
+        {
+            throwError("function {0} requires {1} arguments not {2}"
+                .format(funcName, stmt.parameters.length, arguments.length), stmt.loc);
+        }
+
+        scope.increase(funcScope);
+        for(var i = 0; i < stmt.parameters.length; i++)
+        {
+            var name = stmt.parameters[i].name;
+            var val = arguments[i];
+
+            if(typeSignature[i] && !typeMatch(typeSignature[i], val))
+            {
+                throwError("function {0} requires argument {1} to be {2} not {3}"
+                    .format(funcName, i, typeSignature[i].constructor.name, val.constructor.name), stmt.loc);
+            }
+
+            if(!typeSignature[i])
+                typeSignature[i] = val;
+
+            scope.set(name, createRuntimeVar(val, name));
+        }
+        scope.decrease();
 
         if(!bodyName)
-            bodyName = compileBody(stmt.body, base.ret);
+            bodyName = compileBody(stmt.body, base.ret, funcScope);
 
         base.rjump(bodyName);
+
+        return fnReturn;
     };
 
-    scope.set(stmt.identifier.name, func);
+    func.typeSignature = typeSignature;
+
+    scope.set(funcName, func);
 }
 
-function compileBody(body, end)
+function compileBody(body, end, bodyScope)
 {
     var label = nextName("body");
     base.addFunction(label, function()
     {
-        scope.increase();
+        scope.increase(bodyScope);
         compileStatementList(body);
         scope.decrease();
 
@@ -209,7 +240,7 @@ function boolify(val, type, loc)
     }
 }
 
-function createRuntimeVar(val, name, raw)
+function createRuntimeVar(val, name)
 {
     if(typeof val == "boolean" || val.constructor == types.Boolean)
         return new types.Boolean(val, name);
@@ -260,6 +291,17 @@ statements["AssignmentStatement"] = function(stmt)
 statements["FunctionDeclaration"] = function(stmt)
 {
     //do nothing
+}
+
+statements["ReturnStatement"] = function(stmt)
+{
+    if(stmt.arguments.length != 1)
+        throwError("unsupported right hand side expression", stmt.loc);
+
+    var val = compileExpression(stmt.arguments[0]);
+    fnReturn.set(val);
+    base.ret();
+    block(options.splitterBlock);
 }
 
 statements["CallStatement"] = function(stmt)
@@ -422,7 +464,7 @@ expressions["CallExpression"] = function(expr)
     catch (e)
     {
         var fnName = expr.base.name || base.name;
-        throwError(e.toString() + "\n" + fnName, expr.loc);
+        throwError(e.toString() + "\n- " + "while calling " + fnName, expr.loc);
     }
 }
 

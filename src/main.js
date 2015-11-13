@@ -45,6 +45,7 @@ try
 	options.output = options.output || config.output || "rcon";
 	options.splitterBlock = options.splitterBlock || options.split || config.splitterBlock || "air";
 	options.length = options.length || options.l || config.length || 20;
+	options.returnType = options.returnType || config.returnType || "Float";
 	options.rcon_ip = options.rcon_ip || config.rcon_ip || "localhost";
 	options.rcon_port = options.rcon_port || config.rcon_port || 25575;
 	options.rcon_password = options.rcon_password || options.rcon_pw || config.rcon_password || "hunter2";
@@ -61,6 +62,7 @@ try
 	{
 		var src = fs.readFileSync(files[i]).toString();
 	    var ast = parser.parse(src, {locations: true});
+		fs.writeFileSync("dump.json", JSON.stringify(ast, undefined, 4));
 		compile(ast, path.dirname(files[i]));
 	}
 
