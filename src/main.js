@@ -2,9 +2,6 @@ GLOBAL.options = {};
 
 var fs = require("fs");
 var path = require("path");
-var parser = require("luaparse");
-var base = require("./lib/base.js");
-var compile = require("./compiler.js");
 
 String.prototype.format = function()
 {
@@ -53,6 +50,9 @@ try
 	options.rcon_password = options.rcon_password || options.rcon_pw || config.rcon_password || "hunter2";
 
 	var output = require("./output/" + options.output + ".js");
+	var parser = require("luaparse");
+	var base = require("./lib/base.js");
+	var compile = require("./compiler.js");
 
     if(files.length == 0)
 		throw "No input files specified";
