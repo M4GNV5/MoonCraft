@@ -45,7 +45,7 @@ Float.prototype.set = function(val, conditional)
     else if(typeof val.toInteger == "function")
     {
         this.base.set(val.toInteger(), conditional);
-        this.multiplicate(100, conditional);
+        this.base.multiplicate(100, conditional);
     }
     else if(typeof val == "number")
     {
