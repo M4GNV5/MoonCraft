@@ -16,8 +16,13 @@ module.exports = function(blocks, cmdblocks)
         cmds.push(cmd);
     }
 
-    rcon.connect("134.255.229.20", 25575, "supersecretpassword", function()
+    console.log("Outputting via rcon to " + options.rcon_ip + ":" + options.rcon_port);
+
+    rcon.connect(options.rcon_ip, options.rcon_port, options.rcon_password, function(err)
     {
+        if(err)
+            throw err;
+
         function next(i)
         {
             rcon.sendCommand(cmds[i], function(err, res)
@@ -79,7 +84,7 @@ function Rcon()
     	var q = this.queue;
     	var t = setTimeout(function(){
     		delete q[id]; //drop the timed out request from the queue
-    		callback({error:'Timed out'});
+    		callback("Timed out");
     	},TIMEOUT);
     	this.queue[id]={callback:callback, timeout:t};
     };
@@ -142,8 +147,8 @@ function Rcon()
     this.sendCommand = function(command,callback) {
     	var msg;
     	if (typeof(callback)==='undefined') {callback = function(err, response){};}
-            if(!this.online){msg={"error":'Not Online'};callback(msg);return msg;}
-            if(!this.authed){msg={"error":'Not Authenticated'};callback(msg); return msg;}
+            if(!this.online){msg='Not Online';callback(msg);return msg;}
+            if(!this.authed){msg='Not Authenticated';callback(msg); return msg;}
             var id = this.reqID+0;
     	this.socket.write(this.makePacket(id,COMMAND_TYPE,command));
             this._addQueue(id, callback);

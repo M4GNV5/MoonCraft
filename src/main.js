@@ -1,10 +1,9 @@
-GLOBAL.options = {splitterBlock: "air", length: 20, output: "rcon"};
+GLOBAL.options = {};
 
 var fs = require("fs");
 var path = require("path");
 var parser = require("luaparse");
 var base = require("./lib/base.js");
-var output = require("./output/" + options.output + ".js");
 var compile = require("./compiler.js");
 
 String.prototype.format = function()
@@ -17,23 +16,60 @@ String.prototype.format = function()
 
 try
 {
-    var file = process.argv.slice(2).join(" ");
-    if(!file.trim() || !fs.existsSync(file))
-        throw "usage: node main.js <file>";
+	var args = process.argv.slice(2);
+	var files = [];
 
-    var src = fs.readFileSync(file).toString();
-    var ast = parser.parse(src, {locations: true});
-    fs.writeFileSync("dump.json", JSON.stringify(ast, undefined, 4));
+	for(var i = 0; i < args.length; i++)
+	{
+		if(args[i][0] != "-")
+		{
+			files.push(args[i]);
+		}
+		else
+		{
+			var arg = args[i][1] == "-" ? args[i].substr(0, 2) : args[i][1];
 
-    compile(ast, path.dirname(file));
+			i++;
+			var val;
 
+			if(args[i][0] == "-")
+				val = true;
+			else
+				val = args[i];
+
+			options[arg] = val;
+		}
+	}
+
+	var config = {};
+	if(fs.existsSync("./config.json"))
+		config = JSON.parse(fs.readFileSync("./config.json"));
+
+	options.output = options.output || config.output || "rcon";
+	options.splitterBlock = options.splitterBlock || options.split || config.splitterBlock || "air";
+	options.length = options.length || options.l || config.length || 20;
+	options.rcon_ip = options.rcon_ip || config.rcon_ip || "localhost";
+	options.rcon_port = options.rcon_port || config.rcon_port || 25575;
+	options.rcon_password = options.rcon_password || options.rcon_pw || config.rcon_password || "hunter2";
+
+	var output = require("./output/" + options.output + ".js");
+
+    if(files.length == 0)
+		throw "No input files specified";
+
+	for(var i = 0; i < files.length; i++)
+	{
+		var src = fs.readFileSync(files[i]).toString();
+	    var ast = parser.parse(src, {locations: true});
+		compile(ast, path.dirname(files[i]));
+	}
+
+	console.log("done");
 	base.output(output);
-
-    console.log("done");
 }
 catch(e)
 {
-    console.log(e.toString());
-    throw e;
+	var err = typeof e == "undefined" ? "Unknown error occured" : e.toString();
+    console.log(err);
     process.exit(1);
 }

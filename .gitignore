@@ -1,2 +1,3 @@
 #node modules
 /src/node_modules/
+/src/config.json
