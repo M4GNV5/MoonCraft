@@ -11,7 +11,7 @@ String.prototype.format = function()
 {
 	var val = this;
 	for(var i = 0; i < arguments.length; i++)
-		val = val.replace(new RegExp("\\{" + i + "\\}", "g"), (arguments[i] || "").toString());
+		val = val.replace(new RegExp("\\{" + i + "\\}", "g"), arguments[i]);
 	return val;
 };
 
