@@ -163,12 +163,21 @@ exports.output = function output(outputHandler)
         {
             if(blocks[i].type == "command")
             {
-                if(curr > maxLength - 2 && blocks[i + 1] && blocks[i + 1].conditional)
+                if(blocks[i + 1] && blocks[i + 1].conditional) //conditional commandblocks cannot be in corners
                 {
-                    while(curr > maxLength - 2) //conditional commandblocks cannot be in corners
+                    var count = 0;
+                    for(var ii = i + 1; blocks[ii] && blocks[ii].conditional; ii++)
                     {
-                        outputBlocks.push({x: x, y: y, z: z, tagName: "chain_command_block", data: direction})
-                        move();
+                        count++;
+                    }
+
+                    if(curr + count >= maxLength)
+                    {
+                        while(curr != 1)
+                        {
+                            outputBlocks.push({x: x, y: y, z: z, tagName: "chain_command_block", data: direction})
+                            move();
+                        }
                     }
                 }
 

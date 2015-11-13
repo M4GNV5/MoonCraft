@@ -105,7 +105,7 @@ function compileExpression(expr)
 function checkTypeMismatch(left, right, loc)
 {
     if(!typeMatch(left, right))
-        throwError("Incompatible types " + a.constructor.name + " and " + b.constructor.name, loc);
+        throwError("Incompatible types " + left.constructor.name + " and " + right.constructor.name, loc);
 }
 
 function typeMatch(left, right)
@@ -150,7 +150,16 @@ function boolify(val, type, loc)
     var label = nextName("trueify");
     if(typeof val == "string")
     {
-        return val;
+        if(type)
+        {
+            return val;
+        }
+        else
+        {
+            base.addLabel(label);
+            command(val);
+            return "testforblock %" + label + ":diff% minecraft:chain_command_block -1 {SuccessCount:0}";
+        }
     }
     else if(typeof val != "object")
     {
@@ -208,16 +217,16 @@ function createRuntimeVar(val, name, raw)
         return new types.Integer(val, name);
     else if(typeof val == "number" || val.constructor == types.Float)
         return new types.Float(val, name);
-    else if(val.constructor == types.String)
+    else if(typeof val == "string" || val.constructor == types.String)
         return new types.String(val, name);
+}
 
-    if(typeof val == "string")
-    {
-        var _val = new types.Boolean(false, name);
-        command(val);
-        _val.set(true, true);
-        return _val;
-    }
+function commandToBool(cmd)
+{
+    var val = new types.Boolean(false);
+    command(cmd);
+    val.set(true, true);
+    return val;
 }
 
 var statements = {};
@@ -238,11 +247,12 @@ statements["AssignmentStatement"] = function(stmt)
     if(!oldVal)
     {
         var name = nextName(key);
-        oldVal = createRuntimeVar(newVal, name);
+        oldVal = createRuntimeVar(newVal, name, stmt.init[0]);
         scope.set(key, oldVal);
     }
     else
     {
+        checkTypeMismatch(oldVal, newVal, stmt.loc);
         oldVal.set(newVal);
     }
 }
@@ -261,15 +271,11 @@ statements["IfStatement"] = function(stmt)
 {
     var clauses = stmt.clauses;
 
-    var labels;
     var endLabel = nextName("ifend");
 
-    function checkPrevious()
-    {
-        command("testforblock %" + labels[0] + ":diff% minecraft:chain_command_block -1 {SuccessCount:0}");
-        for(var i = 1; i < labels.length; i++)
-            command("testforblock %" + labels[i] + ":diff% minecraft:chain_command_block -1 {SuccessCount:0}", true);
-    }
+    var hasSucess = new types.Boolean(false, nextName("ifsuccess"));
+
+    var hasElse = false;
 
     for(var i = 0; i < clauses.length; i++)
     {
@@ -278,43 +284,45 @@ statements["IfStatement"] = function(stmt)
         if(type == "IfClause")
         {
             var expr = compileExpression(clauses[i].condition);
-
-            var label = nextName("if");
-            labels = [label];
-            base.addLabel(label);
-            command(trueify(expr, clauses[i].condition.loc));
-
             var bodyLabel = compileBody(clauses[i].body, base.jump.bind(base, endLabel));
 
+            command(trueify(expr, clauses[i].condition.loc));
+
             base.jump(bodyLabel, true);
+            hasSucess.set(true, true);
         }
         else if(type == "ElseifClause")
         {
             var expr = compileExpression(clauses[i].condition);
-
-            var label = nextName("elif");
-            checkPrevious();
-            base.addLabel(label);
+            var bodyLabel = compileBody(clauses[i].body, base.jump.bind(base, endLabel));
 
             var cmd = trueify(expr, clauses[i].condition.loc);
+
+            command(hasSucess.isExact(false));
             command(cmd, true);
 
-            labels.push(label);
-
-            var bodyLabel = compileBody(clauses[i].body, base.jump.bind(base, endLabel));
             base.jump(bodyLabel, true);
+            hasSucess.set(true, true);
         }
         else if(type == "ElseClause")
         {
-            checkPrevious();
-
             var bodyLabel = compileBody(clauses[i].body, base.jump.bind(base, endLabel));
+
+            command(hasSucess.isExact(false));
             base.jump(bodyLabel, true);
+
+            hasElse = true;
         }
         else
         {
             throwError("unsupported clause " + clauses[i].type, stmt.loc);
         }
+    }
+
+    if(!hasElse)
+    {
+        command(hasSucess.isExact(false));
+        base.jump(endLabel, true);
     }
 
     block(options.splitterBlock);
@@ -336,7 +344,7 @@ statements["WhileStatement"] = function(stmt)
 
         var condition = compileExpression(stmt.condition);
         base.addLabel(checkLabel);
-        command(trueify(condition, clauses[i].condition.loc));
+        command(trueify(condition, stmt.condition.loc));
         base.jump(bodyLabel, true);
 
         command("testforblock %-2:diff% minecraft:chain_command_block -1 {SuccessCount:0}");
@@ -356,7 +364,7 @@ statements["RepeatStatement"] = function(stmt)
     compileStatementList(stmt.body);
 
     var condition = compileExpression(stmt.condition);
-    command(trueify(condition, stmt.condition.loc));
+    command(falseify(condition, stmt.condition.loc));
     base.jump(bodyLabel, true);
 
     command("testforblock %-2:diff% minecraft:chain_command_block -1 {SuccessCount:0}");
@@ -374,7 +382,20 @@ function staticLiteral(expr)
 
 expressions["BooleanLiteral"] = staticLiteral;
 expressions["NumericLiteral"] = staticLiteral;
-expressions["StringLiteral"] = staticLiteral;
+expressions["StringLiteral"] = function(expr)
+{
+    if(expr.value[0] == "/")
+    {
+        var val = new types.Boolean(false);
+        command(expr.value.substr(1));
+        val.set(true, true);
+        return val;
+    }
+    else
+    {
+        return expr.value;
+    }
+};
 
 expressions["Identifier"] = function(expr)
 {
@@ -394,17 +415,40 @@ expressions["CallExpression"] = function(expr)
     if(typeof base != "function")
         throwError(base.constructor.name + " is not a function", expr.loc);
 
-    return base.apply(undefined, args);
+    try
+    {
+        return base.apply(undefined, args);
+    }
+    catch (e)
+    {
+        var fnName = expr.base.name || base.name;
+        throwError(e.toString() + "\n" + fnName, expr.loc);
+    }
 }
 
 expressions["UnaryExpression"] = function(expr)
 {
     var left = compileExpression(expr.argument);
 
-    var val = new types.Boolean(false);
-    command(falseify(left, expr.loc));
-    val.set(true, true);
-    return val;
+    if(expr.operator == "not")
+    {
+        var val = new types.Boolean(false);
+        command(falseify(left, expr.loc));
+        val.set(true, true);
+        return val;
+    }
+    else if(expr.operator == "-")
+    {
+        if(typeof left == "object")
+        {
+            checkOperator(left, "multiplicate", "-", expr.loc);
+            left.multiplicate(-1);
+        }
+        else
+        {
+            return -1 * left;
+        }
+    }
 }
 
 expressions["LogicalExpression"] = function(expr)
@@ -418,15 +462,28 @@ expressions["LogicalExpression"] = function(expr)
         "or": function(a, b) { return a || b; }
     };
 
-    if(typeof left != "object" && typeof right != "object" && typeof left != "string" && typeof right != "string")
+    var isLeftCmd = typeof left == "string" && expr.left.type != "StringLiteral";
+    var isRightCmd = typeof right == "string" && expr.right.type != "StringLiteral";
+
+    if(isLeftCmd && !isRightCmd)
+    {
+        left = commandToBool(left);
+    }
+    else if(isRightCmd && !isLeftCmd)
+    {
+        right = commandToBool(right);
+    }
+
+    if(typeof left != "object" && typeof right != "object" && !(isLeftCmd || isRightCmd))
         return compileTimeOps[operator](left, right);
 
     var _left = typeof left == "object" ? left : right;
     var _right = typeof left == "object" ? right : left;
 
-    if(typeMatch(left, right))
+    if(typeMatch(left, right) && !(isLeftCmd || isRightCmd))
     {
         var val = new _left.constructor(_left, nextName(operator));
+        val.isClone = true;
 
         if(operator == "and")
         {
@@ -448,8 +505,9 @@ expressions["LogicalExpression"] = function(expr)
         if(operator == "and")
         {
             var val = new types.Boolean(false, nextName("and"));
+            val.isClone = true;
             var isLeftTrue = trueify(_left, expr.loc);
-            var isRightTrue = trueify(_left, expr.loc);
+            var isRightTrue = trueify(_right, expr.loc);
 
             command(isLeftTrue);
             command(isRightTrue, true);
@@ -460,8 +518,9 @@ expressions["LogicalExpression"] = function(expr)
         else if(operator == "or")
         {
             var val = new types.Boolean(true, nextName("and"));
-            var isLeftFalse = trueify(_left, expr.loc);
-            var isRightFalse = trueify(_left, expr.loc);
+            val.isClone = true;
+            var isLeftFalse = falseify(_left, expr.loc);
+            var isRightFalse = falseify(_right, expr.loc);
 
             command(isLeftFalse);
             command(isRightFalse, true);
@@ -551,6 +610,7 @@ expressions["BinaryExpression"] = function(expr)
         {
             checkOperator(clone, op, operator, expr.loc);
             clone[op](right);
+            return clone;
         }
         else
         {
@@ -558,7 +618,6 @@ expressions["BinaryExpression"] = function(expr)
             clone.remove(right);
             return op(clone, 0);
         }
-        return clone;
     }
     else
     {
@@ -573,13 +632,12 @@ expressions["BinaryExpression"] = function(expr)
             clone.isClone = true;
 
             checkOperator(clone, op, operator, expr.loc);
-            return clone[op](_right);
+            clone[op](_right);
+            return clone;
         }
         else
         {
             return op(_left, _right);
         }
-
-        return clone;
     }
 }

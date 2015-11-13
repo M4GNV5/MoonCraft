@@ -1,5 +1,6 @@
 var nextName = require("./../lib/naming.js");
 var Integer = require("./Integer.js");
+var String = require("./String.js");
 
 function Boolean(startVal, name)
 {
@@ -24,7 +25,7 @@ Boolean.prototype.set = function(val, conditional)
     else if(typeof val == "boolean")
         this.base.set(val ? 1 : 0, conditional);
     else
-        throw "Cannot assing '" + val.constructor.name + "' to a Boolean";
+        throw "Cannot assing '" + val.constructor.name + "' to a Boolean" + (new Error()).stack;
 }
 
 Boolean.prototype.toInteger = function()
@@ -39,7 +40,10 @@ Boolean.prototype.clone = function(cloneName)
 
 Boolean.prototype.toTellrawExtra = function()
 {
-    return JSON.stringify({score: {objective: Integer.scoreName, name: this.name}});
+    var val = new String("false");
+    command(this.isExact(true));
+    val.set("true", true);
+    return val.toTellrawExtra();
 }
 
 Boolean.prototype.isExact = function(val)

@@ -36,20 +36,20 @@ function convertStatic(val)
     return _val;
 }
 
-Float.prototype.set = function(val)
+Float.prototype.set = function(val, conditional)
 {
     if(val instanceof Float)
     {
-        this.base.set(val.base);
+        this.base.set(val.base, conditional);
     }
     else if(typeof val.toInteger == "function")
     {
-        this.base.set(val.toInteger());
-        this.multiplicate(100);
+        this.base.set(val.toInteger(), conditional);
+        this.multiplicate(100, conditional);
     }
     else if(typeof val == "number")
     {
-        this.base.set(convertStatic(val));
+        this.base.set(convertStatic(val), conditional);
     }
     else
     {
@@ -57,21 +57,21 @@ Float.prototype.set = function(val)
     }
 }
 
-Float.prototype.add = function(val)
+Float.prototype.add = function(val, conditional)
 {
     if(val instanceof Float)
     {
-        this.base.add(val.base);
+        this.base.add(val.base, conditional);
     }
     else if(typeof val.toInteger == "function")
     {
         val = val.toInteger().clone();
         val.multiplicate(100);
-        this.base.add(val);
+        this.base.add(val, conditional);
     }
     else if(typeof val == "number")
     {
-        this.base.add(convertStatic(val));
+        this.base.add(convertStatic(val), conditional);
     }
     else
     {
@@ -79,21 +79,21 @@ Float.prototype.add = function(val)
     }
 }
 
-Float.prototype.remove = function(val)
+Float.prototype.remove = function(val, conditional)
 {
     if(val instanceof Float)
     {
-        this.base.remove(val.base);
+        this.base.remove(val.base, conditional);
     }
     else if(typeof val.toInteger == "function")
     {
         val = val.toInteger().clone();
         val.multiplicate(100);
-        this.base.remove(val);
+        this.base.remove(val, conditional);
     }
     else if(typeof val == "number")
     {
-        this.base.remove(convertStatic(val));
+        this.base.remove(convertStatic(val), conditional);
     }
     else
     {
@@ -101,21 +101,21 @@ Float.prototype.remove = function(val)
     }
 }
 
-Float.prototype.multiplicate = function(val)
+Float.prototype.multiplicate = function(val, conditional)
 {
     if(val instanceof Float)
     {
-        this.base.multiplicate(val.base);
-        this.base.divide(100);
+        this.base.multiplicate(val.base, conditional);
+        this.base.divide(100, conditional);
     }
     else if(typeof val.toInteger == "function")
     {
-        this.base.multiplicate(val);
+        this.base.multiplicate(val, conditional);
     }
     else if(typeof val == "number")
     {
-        this.base.multiplicate(convertStatic(val));
-        this.base.divide(100);
+        this.base.multiplicate(convertStatic(val), conditional);
+        this.base.divide(100, conditional);
     }
     else
     {
@@ -123,21 +123,21 @@ Float.prototype.multiplicate = function(val)
     }
 }
 
-Float.prototype.divide = function(val)
+Float.prototype.divide = function(val, conditional)
 {
     if(val instanceof Float)
     {
-        this.base.multiplicate(100);
-        this.base.divide(val.base);
+        this.base.multiplicate(100, conditional);
+        this.base.divide(val.base, conditional);
     }
     else if(typeof val.toInteger == "function")
     {
-        this.base.divide(val);
+        this.base.divide(val, conditional);
     }
     else if(typeof val == "number")
     {
-        this.base.multiplicate(100);
-        this.base.divide(convertStatic(val));
+        this.base.multiplicate(100, conditional);
+        this.base.divide(convertStatic(val), conditional);
     }
     else
     {
@@ -145,21 +145,21 @@ Float.prototype.divide = function(val)
     }
 }
 
-Float.prototype.mod = function(val)
+Float.prototype.mod = function(val, conditional)
 {
     if(val instanceof Float)
     {
-        this.base.mod(val.base);
+        this.base.mod(val.base, conditional);
     }
     else if(typeof val.toInteger == "function")
     {
         val = val.toInteger().clone();
-        val.multiplicate(Float.accuracy);
-        this.base.mod(val);
+        val.multiplicate(Float.accuracy, conditional);
+        this.base.mod(val, conditional);
     }
     else if(typeof val == "number")
     {
-        this.base.mod(convertStatic(val));
+        this.base.mod(convertStatic(val), conditional);
     }
     else
     {
