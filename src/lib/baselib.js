@@ -6,18 +6,45 @@ var types = require("./types.js");
 var parser = require("luaparse");
 var compile = require("./../compiler.js");
 
+var cache = [];
+
+var stdlib = {};
+var stdlibPath = path.join(__dirname, "../../stdlib/");
+var files = fs.readdirSync(stdlibPath); //had trouble with async version
+
+for(var i = 0; i < files.length; i++)
+{
+    var ext = path.extname(files[i]);
+    var name = path.basename(files[i], ext);
+
+    if(ext == ".js" || ext == ".lua")
+        stdlib[name] = path.join(stdlibPath, files[i]);
+}
+
 module.exports = function addBaseLib(scope, srcPath)
 {
-    var oldImport = scope.get("import");
-    if(oldImport)
+    if(scope.get("import"))
         return;
 
     scope.set("command", require("./base.js").command);
-    scope.set("import", function(relPath)
+
+    scope.set("import", function(name)
     {
-        var file = path.resolve(path.join(srcPath, relPath));
-        if(!fs.existsSync(file))
-            throw "cannot import module " + srcPath + ", file does not exist";
+        var file;
+        if(stdlib.hasOwnProperty(name))
+        {
+            file = stdlib[name];
+        }
+        else
+        {
+            file = path.resolve(path.join(srcPath, name));
+            if(!fs.existsSync(file))
+                throw "cannot import module " + name + ", file does not exist";
+        }
+
+        if(cache.indexOf(file) != -1)
+            return;
+        cache.push(file);
 
         var ext = path.extname(file);
 
@@ -37,7 +64,7 @@ module.exports = function addBaseLib(scope, srcPath)
         }
         else
         {
-            throw "cannot import module " + srcPath + ", unknown file extension " + ext;
+            throw "cannot import module " + name + ", unknown file extension " + ext;
         }
     });
 

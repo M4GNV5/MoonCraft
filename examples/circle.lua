@@ -1,4 +1,4 @@
-import("./../stdlib/chat.js")
+import("chat")
 
 radius = 1
 pi = 3.14

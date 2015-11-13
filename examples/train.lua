@@ -1,4 +1,4 @@
-import("./../stdlib/chat.js")
+import("chat")
 
 --average speed
 speed = 8 --m/s
