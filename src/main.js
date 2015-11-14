@@ -66,7 +66,6 @@ try
 	{
 		var src = fs.readFileSync(files[i]).toString();
 	    var ast = parser.parse(src, {locations: true});
-		fs.writeFileSync("dump.json", JSON.stringify(ast, undefined, 4));
 		compile(ast, path.dirname(files[i]));
 	}
 
