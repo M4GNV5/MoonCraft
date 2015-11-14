@@ -57,6 +57,7 @@ try
 	var output = require("./output/" + options.output + ".js");
 	var parser = require("luaparse");
 	var base = require("./lib/base.js");
+	require("./lib/baselib.js");
 	var compile = require("./compiler.js");
 
     if(files.length == 0)
@@ -66,7 +67,7 @@ try
 	{
 		var src = fs.readFileSync(files[i]).toString();
 	    var ast = parser.parse(src, {locations: true});
-		compile(ast, path.dirname(files[i]));
+		compile(ast, path.dirname(files[i]), true);
 	}
 
 	console.log("done");

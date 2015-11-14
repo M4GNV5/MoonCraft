@@ -2,16 +2,13 @@ var base = require("./lib/base.js");
 var types = require("./lib/types.js");
 var nextName = require("./lib/naming.js");
 var optimize = require("./lib/optimize.js");
-var addBaseLib = require("./lib/baselib.js");
 var Scope = require("./lib/scope.js");
 var scope = new Scope();
 
 var fnReturn = new types[options.returnType](0, "retVal");
 
-module.exports = function(ast, path)
+module.exports = function(ast, path, isMain)
 {
-    addBaseLib(scope, path);
-
     for(var i = 0; i < ast.body.length; i++)
     {
         if(ast.body[i].type == "FunctionDeclaration")
@@ -23,12 +20,16 @@ module.exports = function(ast, path)
         compileStatement(ast.body[i]);
     }
 
-    var Integer = types.Integer;
-    for(var i = 0; i < Integer.statics.length; i++)
-        base.unshiftCommand(["scoreboard players set", "static" + Integer.statics[i], Integer.scoreName, Integer.statics[i]].join(" "));
+    if(isMain)
+    {
+        var Integer = types.Integer;
+        for(var i = 0; i < Integer.statics.length; i++)
+            base.unshiftCommand(["scoreboard players set", "static" + Integer.statics[i], Integer.scoreName, Integer.statics[i]].join(" "));
 
-    base.unshiftCommand("scoreboard objectives add " + Integer.scoreName + " dummy CPL Variables");
+        base.unshiftCommand("scoreboard objectives add " + Integer.scoreName + " dummy CPL Variables");
+    }
 }
+module.exports.scope = scope;
 
 function throwError(message, loc)
 {
