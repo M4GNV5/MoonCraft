@@ -501,6 +501,7 @@ expressions["UnaryExpression"] = function(expr)
         if(typeof left == "object")
         {
             var clone = left.isClone ? left : left.clone();
+            clone.isClone = true;
 
             checkOperator(left, "multiplicate", "-", expr.loc);
             clone.multiplicate(-1);
