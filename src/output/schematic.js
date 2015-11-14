@@ -2,7 +2,7 @@ var itemIds = require("./itemIds.json");
 var tagNames = {};
 for(var i = 0; i < itemIds.length; i++)
 {
-    tagNames[itemIds[i].text_type] = i;
+    tagNames[itemIds[i].text_type] = itemIds[i].type;
 }
 
 module.exports = function(blocks, cmdBlocks)
@@ -38,7 +38,8 @@ module.exports = function(blocks, cmdBlocks)
 
         tileEntities.push({
             Command: cmdBlocks[i].command,
-            id: "control",
+            auto: 1,
+            id: "Control",
             x: cmdBlocks[i].x,
             y: cmdBlocks[i].y,
             z: cmdBlocks[i].z
@@ -103,6 +104,7 @@ var schema = {
 };
 var controlSchema = {
     Command: tagId("string"),
+    auto: tagId("byte"),
     id: tagId("string"),
     x: tagId("int"),
     y: tagId("int"),
