@@ -1,5 +1,6 @@
 var path = require("path");
 var fs = require("fs");
+var vm = require("vm");
 
 var types = require("./types.js");
 
@@ -66,6 +67,19 @@ scope.set("import", function(name)
     {
         throw "cannot import module " + name + ", unknown file extension " + ext;
     }
+});
+
+scope.set("js_eval", function(code)
+{
+    var context = {};
+    for(var i = 0; i < scope.stack.length; i++)
+    {
+        for(var key in scope[i])
+            context[key] = scope[i][key];
+    }
+
+    context = vm.createContext(context);
+    return vm.runInContext(code, context);
 });
 
 scope.set("boolean", function(val, name)
