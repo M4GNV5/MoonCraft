@@ -82,9 +82,9 @@ exports.addFunction = function(label, fn)
     currLabel = label;
 }*/
 
-var x = 0;
-var y = 4;
-var z = 0;
+var x = options.x;
+var y = options.y;
+var z = options.z;
 var maxLength = options.length;
 var direction = 5;
 var nextDirection;
