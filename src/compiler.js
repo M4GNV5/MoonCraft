@@ -73,12 +73,12 @@ function compileFunction(stmt)
             if(!typeSignature[i])
                 typeSignature[i] = val;
 
-            scope.set(name, createRuntimeVar(val, name));
+            scope.set(name, createRuntimeVar(val, nextName(name)));
         }
         scope.decrease();
 
         if(!bodyName)
-            bodyName = compileBody(stmt.body, base.ret, funcScope);
+            bodyName = compileBody(stmt.body, base.ret, funcName, funcScope);
 
         base.rjump(bodyName);
 
@@ -90,9 +90,9 @@ function compileFunction(stmt)
     scope.set(funcName, func);
 }
 
-function compileBody(body, end, bodyScope)
+function compileBody(body, end, label, bodyScope)
 {
-    var label = nextName("body");
+    label = label || nextName("body");
     base.addFunction(label, function()
     {
         scope.increase(bodyScope);
@@ -299,7 +299,9 @@ statements["ReturnStatement"] = function(stmt)
         throwError("unsupported right hand side expression", stmt.loc);
 
     var val = compileExpression(stmt.arguments[0]);
+    checkTypeMismatch(val, fnReturn, stmt.loc);
     fnReturn.set(val);
+
     base.ret();
     block(options.splitterBlock);
 }
