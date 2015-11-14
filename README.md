@@ -1,9 +1,6 @@
 #MoonCraft
 Lua to commandblock compiler
 
-##Video
-[![demo video](demo.gif)](http://gfycat.com/ZestyTenseBufeo)
-
 ##Example
 ```lua
 import("chat")
@@ -20,3 +17,5 @@ while radius < 20 do
     radius = radius + 1
 end
 ```
+
+![screenshot](http://i.imgur.com/UbzM9CW.png)
