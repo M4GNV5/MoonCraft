@@ -1,3 +1,5 @@
+var optimize = require("./optimize.js");
+
 var functions = {};
 
 var currBlocks = [];
@@ -152,9 +154,9 @@ function format(cmd, index)
 
 exports.output = function output(outputHandler)
 {
-    var _functions = [currBlocks];
+    var _functions = [optimize.removeDoubleSplit(currBlocks)];
     for(var key in functions)
-        _functions.push(functions[key]);
+        _functions.push(optimize.removeDoubleSplit(functions[key]));
 
     for(var i0 = 0; i0 < _functions.length; i0++)
     {

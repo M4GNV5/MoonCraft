@@ -15,3 +15,21 @@ exports.selfAssign = function(stmt) // a = a + b --> a += b
             return {operator: op, argument: val.left};
     }
 }
+
+exports.removeDoubleSplit = function(blocks)
+{
+    var sBlock = options.splitterBlock;
+    for(var i = 0; i < blocks.length; i++)
+    {
+        if(blocks[i].tagName == sBlock && (blocks[i + 1] || {}).tagName == sBlock)
+        {
+            blocks.splice(i, 1);
+            i--;
+        }
+    }
+
+    if(blocks[blocks.length - 1].tagName == sBlock)
+        blocks.splice(blocks.length - 1, 1);
+
+    return blocks;
+}
