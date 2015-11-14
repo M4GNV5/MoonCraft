@@ -1,6 +1,7 @@
 var base = require("./lib/base.js");
 var types = require("./lib/types.js");
 var nextName = require("./lib/naming.js");
+var optimize = require("./lib/optimize.js");
 var addBaseLib = require("./lib/baselib.js");
 var Scope = require("./lib/scope.js");
 var scope = new Scope();
@@ -248,13 +249,15 @@ function createRuntimeVar(val, name)
         return new types.Integer(val, name);
     else if(typeof val == "number" || val.constructor == types.Float)
         return new types.Float(val, name);
+    else if(typeof val == "string" && val[0] == "/")
+        return commandToBool(val, name);
     else if(typeof val == "string" || val.constructor == types.String)
         return new types.String(val, name);
 }
 
-function commandToBool(cmd)
+function commandToBool(cmd, name)
 {
-    var val = new types.Boolean(false);
+    var val = new types.Boolean(false, name);
     command(cmd);
     val.set(true, true);
     return val;
@@ -270,16 +273,30 @@ statements["AssignmentStatement"] = function(stmt)
     if(stmt.init.length != 1)
         throwError("unsupported right hand side expression", stmt.loc);
 
+    var optimized = optimize.selfAssign(stmt);
+
     var key = stmt.variables[0].name;
 
     var oldVal = scope.get(key);
-    var newVal = compileExpression(stmt.init[0]);
+    var rightExpr = optimized ? optimized.argument : stmt.init[0];
+    var newVal = compileExpression(rightExpr);
 
     if(!oldVal)
     {
         var name = nextName(key);
         oldVal = createRuntimeVar(newVal, name, stmt.init[0]);
         scope.set(key, oldVal);
+    }
+    else if(optimized)
+    {
+        var ops = {
+            "+": "add",
+            "-": "remove",
+            "*": "multiplicate",
+            "/": "divide",
+            "%": "mod"
+        };
+        oldVal[ops[optimized.operator]](newVal);
     }
     else
     {
@@ -583,6 +600,8 @@ expressions["BinaryExpression"] = function(expr)
 
     checkTypeMismatch(left, right, expr.loc);
 
+    var noCommutative = ["/", "%", "<", ">", "<=", ">="];
+
     var compileTimeOps = {
         "+": function(a, b) { return a + b; },
         "-": function(a, b) { return a - b; },
@@ -642,9 +661,12 @@ expressions["BinaryExpression"] = function(expr)
     {
         return compileTimeOps[operator](left, right);
     }
-    else if(typeof left == "object" && typeof right == "object")
+    else if(typeof right == "object" && (typeof left == "object"  || noCommutative.indexOf(operator) != -1))
     {
         var op = runtimeOps[operator];
+
+        if(typeof left != "object")
+            left = createRuntimeVar(left);
 
         checkOperator(left, "clone", "clone", expr.loc);
         var clone = left.isClone ? left : left.clone();
@@ -660,7 +682,7 @@ expressions["BinaryExpression"] = function(expr)
         {
             checkOperator(left, "remove", "-", expr.loc);
             clone.remove(right);
-            return op(clone, 0);
+            return "/" + op(clone, 0);
         }
     }
     else
@@ -681,7 +703,7 @@ expressions["BinaryExpression"] = function(expr)
         }
         else
         {
-            return op(_left, _right);
+            return "/" + op(_left, _right);
         }
     }
 }
