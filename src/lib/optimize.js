@@ -14,6 +14,11 @@ exports.selfAssign = function(stmt) // a = a + b --> a += b
         else if(val.right.type == "Identifier" && val.right.name == varName && rightSupported.indexOf(op) != -1)
             return {operator: op, argument: val.left};
     }
+    if(val.type == "UnaryExpression")
+    {
+        if(val.operator == "-" && val.argument.name == varName)
+            return {operator: "*", argument: {type: "NumericLiteral", value: -1}};
+    }
 }
 
 exports.removeDoubleSplit = function(blocks)
