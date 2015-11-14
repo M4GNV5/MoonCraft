@@ -493,10 +493,7 @@ expressions["UnaryExpression"] = function(expr)
 
     if(expr.operator == "not")
     {
-        var val = new types.Boolean(false);
-        command(falseify(left, expr.loc));
-        val.set(true, true);
-        return val;
+        return "/" + falseify(left, expr.loc);
     }
     else if(expr.operator == "-")
     {
