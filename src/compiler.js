@@ -5,7 +5,8 @@ var optimize = require("./lib/optimize.js");
 var Scope = require("./lib/Scope.js");
 var scope = new Scope();
 
-var fnReturn = new types[options.returnType](0, "retVal");
+var fnReturns = [];
+var currRetSignature = [];
 var breakLabel;
 
 module.exports = function(ast, path, isMain)
@@ -52,6 +53,7 @@ function compileFunction(stmt)
     var funcScope = scope.decrease();
 
     var typeSignature = [];
+    var returnSignature = [];
 
     var func = function()
     {
@@ -81,14 +83,30 @@ function compileFunction(stmt)
         scope.decrease();
 
         if(!bodyName)
+        {
+            var _currRetSignature = currRetSignature;
+
+            currRetSignature = false;
             bodyName = compileBody(stmt.body, base.ret, funcName, funcScope);
+            returnSignature = currRetSignature;
+
+            currRetSignature = _currRetSignature;
+        }
+
 
         base.rjump(bodyName);
 
-        return fnReturn;
+        var retValue = [];
+        for(var i = 0; i < returnSignature.length; i++)
+        {
+            var type = returnSignature[i].constructor.name;
+            retValue[i] = fnReturns[i][type];
+        }
+        return retValue;
     };
 
     func.typeSignature = typeSignature;
+    func.returnSignature = returnSignature;
 
     scope.set(funcName, func);
 }
@@ -126,14 +144,19 @@ function compileStatement(stmt)
     return statements[type](stmt);
 }
 
-function compileExpression(expr)
+function compileExpression(expr, supportArrays)
 {
     var type = expr.type;
 
     if(!expressions.hasOwnProperty(type))
         throwError("unknown expression type " + type, expr.loc);
 
-    return expressions[type](expr);
+    var val = expressions[type](expr);
+
+    if(!supportArrays && val instanceof Array)
+        return val[0];
+    else
+        return val;
 }
 
 function checkTypeMismatch(left, right, loc)
@@ -267,7 +290,7 @@ function commandToBool(cmd, name)
 
 function assignStatement(stmt, scopeGet, scopeSet)
 {
-    function assign(oldVal, newVal, optimized)
+    function assign(key, oldVal, newVal, optimized)
     {
         if(!oldVal)
         {
@@ -309,7 +332,7 @@ function assignStatement(stmt, scopeGet, scopeSet)
 
         var oldVal = scopeGet(key);
         var rightExpr = optimized ? optimized.argument : right;
-        var newVal = compileExpression(rightExpr);
+        var newVal = compileExpression(rightExpr, true);
 
         if(newVal instanceof Array)
         {
@@ -321,20 +344,21 @@ function assignStatement(stmt, scopeGet, scopeSet)
             rest = [];
         }
 
-        assign(oldVal, newVal, optimized);
+        assign(key, oldVal, newVal, optimized);
     }
 
-    for(var i = stmt.init.length; i < stmt.variables.length && i < rest.length; i++)
+    for(var i = 0; i < rest.length; i++)
     {
-        var left = stmt.variables[i];
+        var left = stmt.variables[i + stmt.init.length];
 
         if(left.type != "Identifier")
             throwError("unsupported left hand side expression", stmt.loc);
 
-        var oldVal = scopeGet(left.name);
+        var key = left.name;
+        var oldVal = scopeGet(key);
         var newVal = rest[i];
 
-        assign(oldVal, newVal);
+        assign(key, oldVal, newVal);
     }
 }
 
@@ -361,12 +385,41 @@ statements["FunctionDeclaration"] = function(stmt)
 
 statements["ReturnStatement"] = function(stmt)
 {
-    if(stmt.arguments.length != 1)
-        throwError("unsupported right hand side expression", stmt.loc);
+    var args = [];
+    for(var i = 0; i < stmt.arguments.length; i++)
+    {
+        args[i] = compileExpression(stmt.arguments[i]);
+    }
 
-    var val = compileExpression(stmt.arguments[0]);
-    checkTypeMismatch(val, fnReturn, stmt.loc);
-    fnReturn.set(val);
+    if(currRetSignature)
+    {
+        if(stmt.arguments.length != currRetSignature.length)
+            throwError("cannot return a different count of arguments than before", stmt.loc);
+
+        for(var i = 0; i < currRetSignature.length && i < args.length; i++)
+        {
+            if(!typeMatch(currRetSignature[i], args[i]))
+                throwError("cannot return a different type signature than before", stmt.arguments[i].loc);
+        }
+    }
+    else
+    {
+        currRetSignature = args;
+    }
+
+    fnReturns = [];
+    for(var i = 0; i < args.length; i++)
+    {
+        var val = args[i];
+        var type = val.constructor.name;
+
+        fnReturns[i] = fnReturns[i] || {};
+
+        if(fnReturns[i][type])
+            fnReturns[i][type].set(val);
+        else
+            fnReturns[i][type] = createRuntimeVar(val, "ret" + i + type);
+    }
 
     base.ret();
     block(options.splitterBlock);
