@@ -2,7 +2,7 @@ var base = require("./lib/base.js");
 var types = require("./lib/types.js");
 var nextName = require("./lib/naming.js");
 var optimize = require("./lib/optimize.js");
-var Scope = require("./lib/scope.js");
+var Scope = require("./lib/Scope.js");
 var scope = new Scope();
 
 var fnReturn = new types[options.returnType](0, "retVal");
