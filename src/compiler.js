@@ -6,6 +6,7 @@ var Scope = require("./lib/Scope.js");
 var scope = new Scope();
 
 var fnReturn = new types[options.returnType](0, "retVal");
+var breakLabel;
 
 module.exports = function(ast, path, isMain)
 {
@@ -324,6 +325,15 @@ statements["ReturnStatement"] = function(stmt)
     block(options.splitterBlock);
 }
 
+statements["BreakStatement"] = function(stmt)
+{
+    if(!breakLabel)
+        throwError("Invalid break statement", stmt.loc);
+
+    base.jump(breakLabel);
+    block(options.splitterBlock);
+}
+
 statements["CallStatement"] = function(stmt)
 {
     compileExpression(stmt.expression);
@@ -397,6 +407,9 @@ statements["WhileStatement"] = function(stmt)
     var checkLabel = bodyLabel + "check";
     var endLabel = bodyLabel + "end";
 
+    var _breakLabel = breakLabel;
+    breakLabel = endLabel;
+
     base.jump(checkLabel);
     block(options.splitterBlock);
 
@@ -413,12 +426,17 @@ statements["WhileStatement"] = function(stmt)
         base.jump(endLabel, true);
     });
     base.addLabel(endLabel);
+
+    breakLabel = _breakLabel;
 }
 
 statements["RepeatStatement"] = function(stmt)
 {
     var bodyLabel = nextName("repeat");
     var endLabel = bodyLabel + "end";
+
+    var _breakLabel = breakLabel;
+    breakLabel = endLabel;
 
     base.addLabel(bodyLabel);
 
@@ -435,6 +453,8 @@ statements["RepeatStatement"] = function(stmt)
     scope.decrease();
     block(options.splitterBlock);
     base.addLabel(endLabel);
+
+    breakLabel = _breakLabel;
 }
 
 function staticLiteral(expr)
