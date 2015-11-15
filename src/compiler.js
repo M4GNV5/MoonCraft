@@ -265,46 +265,93 @@ function commandToBool(cmd, name)
     return val;
 }
 
+function assignStatement(stmt, scopeGet, scopeSet)
+{
+    function assign(oldVal, newVal, optimized)
+    {
+        if(!oldVal)
+        {
+            var name = nextName(key);
+            oldVal = createRuntimeVar(newVal, name);
+            scopeSet(key, oldVal);
+        }
+        else if(optimized)
+        {
+            var ops = {
+                "+": "add",
+                "-": "remove",
+                "*": "multiplicate",
+                "/": "divide",
+                "%": "mod"
+            };
+            oldVal[ops[optimized.operator]](newVal);
+        }
+        else
+        {
+            checkTypeMismatch(oldVal, newVal, stmt.loc);
+            oldVal.set(newVal);
+        }
+    }
+
+
+    var rest;
+    for(var i = 0; i < stmt.variables.length && i < stmt.init.length; i++)
+    {
+        var left = stmt.variables[i];
+        var right = stmt.init[i];
+
+        if(left.type != "Identifier")
+            throwError("unsupported left hand side expression", stmt.loc);
+
+        var optimized = optimize.selfAssign(left, right);
+
+        var key = left.name;
+
+        var oldVal = scopeGet(key);
+        var rightExpr = optimized ? optimized.argument : right;
+        var newVal = compileExpression(rightExpr);
+
+        if(newVal instanceof Array)
+        {
+            rest = newVal.slice(1);
+            newVal = newVal[0];
+        }
+        else
+        {
+            rest = [];
+        }
+
+        assign(oldVal, newVal, optimized);
+    }
+
+    for(var i = stmt.init.length; i < stmt.variables.length && i < rest.length; i++)
+    {
+        var left = stmt.variables[i];
+
+        if(left.type != "Identifier")
+            throwError("unsupported left hand side expression", stmt.loc);
+
+        var oldVal = scopeGet(left.name);
+        var newVal = rest[i];
+
+        assign(oldVal, newVal);
+    }
+}
+
 var statements = {};
 var expressions = {};
 
 statements["AssignmentStatement"] = function(stmt)
 {
-    if(stmt.variables.length != 1 || stmt.variables[0].type != "Identifier")
-        throwError("unsupported left hand side expression", stmt.loc);
-    if(stmt.init.length != 1)
-        throwError("unsupported right hand side expression", stmt.loc);
+    assignStatement(stmt, scope.get.bind(scope), scope.set.bind(scope));
+}
 
-    var optimized = optimize.selfAssign(stmt);
-
-    var key = stmt.variables[0].name;
-
-    var oldVal = scope.get(key);
-    var rightExpr = optimized ? optimized.argument : stmt.init[0];
-    var newVal = compileExpression(rightExpr);
-
-    if(!oldVal)
+statements["LocalStatement"] = function()
+{
+    assignStatement(stmt, function(key)
     {
-        var name = nextName(key);
-        oldVal = createRuntimeVar(newVal, name, stmt.init[0]);
-        scope.set(key, oldVal);
-    }
-    else if(optimized)
-    {
-        var ops = {
-            "+": "add",
-            "-": "remove",
-            "*": "multiplicate",
-            "/": "divide",
-            "%": "mod"
-        };
-        oldVal[ops[optimized.operator]](newVal);
-    }
-    else
-    {
-        checkTypeMismatch(oldVal, newVal, stmt.loc);
-        oldVal.set(newVal);
-    }
+        scope.current()[key];
+    }, scope.set.bind(scope));
 }
 
 statements["FunctionDeclaration"] = function(stmt)

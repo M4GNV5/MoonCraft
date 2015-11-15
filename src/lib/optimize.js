@@ -1,10 +1,9 @@
-exports.selfAssign = function(stmt) // a = a + b --> a += b
+exports.selfAssign = function(left, val) // a = a + b --> a += b
 {
     var leftSupported = ["+", "-", "*", "/", "%"];
     var rightSupported = ["+", "-", "*"];
 
-    var varName = stmt.variables[0].name;
-    var val = stmt.init[0];
+    var varName = left.name;
     if(val.type == "BinaryExpression")
     {
         var op = val.operator;
