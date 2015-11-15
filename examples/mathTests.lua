@@ -3,9 +3,9 @@ import("math")
 
 function testSin()
     value = float(0)
-    while value < 7 do
+    while value <= 6.28 do
         tellraw("sin of ", value, " is ", sin(value))
-        value = value + 1.57
+        value = value + 3.14 / 4
     end
 end
 
