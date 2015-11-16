@@ -18,7 +18,7 @@ exports.selfAssign = function(left, val) // a = a + b --> a += b
         if(val.operator == "-" && val.argument.name == varName)
             return {operator: "*", argument: {type: "NumericLiteral", value: -1}};
     }
-}
+};
 
 exports.removeDoubleSplit = function(blocks)
 {
@@ -36,4 +36,4 @@ exports.removeDoubleSplit = function(blocks)
         blocks.splice(blocks.length - 1, 1);
 
     return blocks;
-}
+};

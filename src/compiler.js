@@ -30,7 +30,7 @@ module.exports = function(ast, path, isMain)
 
         base.unshiftCommand("scoreboard objectives add " + Integer.scoreName + " dummy CPL Variables");
     }
-}
+};
 module.exports.scope = scope;
 
 function throwError(message, loc)
@@ -171,7 +171,7 @@ function typeMatch(left, right)
 		[types.Boolean, (true).constructor], //bool
 		[types.Integer, types.Float, (0).constructor], //int, float
 		[types.String, ("").constructor] //string
-	]
+	];
 
 	if(left.constructor == right.constructor)
 		return true;
@@ -368,20 +368,20 @@ var expressions = {};
 statements["AssignmentStatement"] = function(stmt)
 {
     assignStatement(stmt, scope.get.bind(scope), scope.set.bind(scope));
-}
+};
 
 statements["LocalStatement"] = function(stmt)
 {
     assignStatement(stmt, function(key)
     {
-        scope.current()[key];
+        return scope.current()[key];
     }, scope.set.bind(scope));
-}
+};
 
 statements["FunctionDeclaration"] = function(stmt)
 {
     //do nothing
-}
+};
 
 statements["ReturnStatement"] = function(stmt)
 {
@@ -423,7 +423,7 @@ statements["ReturnStatement"] = function(stmt)
 
     base.ret();
     block(options.splitterBlock);
-}
+};
 
 statements["BreakStatement"] = function(stmt)
 {
@@ -432,12 +432,12 @@ statements["BreakStatement"] = function(stmt)
 
     base.jump(breakLabel);
     block(options.splitterBlock);
-}
+};
 
 statements["CallStatement"] = function(stmt)
 {
     compileExpression(stmt.expression);
-}
+};
 
 statements["IfStatement"] = function(stmt)
 {
@@ -499,14 +499,14 @@ statements["IfStatement"] = function(stmt)
 
     block(options.splitterBlock);
     base.addLabel(endLabel);
-}
+};
 
 statements["DoStatement"] = function(stmt)
 {
     scope.increase();
     compileStatementList(stmt.body);
     scope.decrease();
-}
+};
 
 statements["WhileStatement"] = function(stmt)
 {
@@ -535,7 +535,7 @@ statements["WhileStatement"] = function(stmt)
     base.addLabel(endLabel);
 
     breakLabel = _breakLabel;
-}
+};
 
 statements["RepeatStatement"] = function(stmt)
 {
@@ -562,7 +562,7 @@ statements["RepeatStatement"] = function(stmt)
     base.addLabel(endLabel);
 
     breakLabel = _breakLabel;
-}
+};
 
 expressions["BooleanLiteral"] = function(expr)
 {
@@ -589,7 +589,7 @@ expressions["Identifier"] = function(expr)
     if(!val)
         throwError("use of undefined variable " + expr.name, expr.loc);
     return val;
-}
+};
 
 expressions["CallExpression"] = function(expr)
 {
@@ -610,7 +610,7 @@ expressions["CallExpression"] = function(expr)
         var fnName = expr.base.name || base.name;
         throwError(e.toString() + "\n- " + "while calling " + fnName, expr.loc);
     }
-}
+};
 
 expressions["UnaryExpression"] = function(expr)
 {
@@ -637,7 +637,7 @@ expressions["UnaryExpression"] = function(expr)
             return -1 * left;
         }
     }
-}
+};
 
 expressions["LogicalExpression"] = function(expr)
 {
@@ -717,7 +717,7 @@ expressions["LogicalExpression"] = function(expr)
             return val;
         }
     }
-}
+};
 
 expressions["BinaryExpression"] = function(expr)
 {
@@ -782,7 +782,7 @@ expressions["BinaryExpression"] = function(expr)
             checkOperator(a, "isBetween", operator, expr.loc);
             return a.isBetween(undefined, b);
         }
-    }
+    };
 
     if(typeof left != "object" && typeof right != "object")
     {
@@ -833,4 +833,4 @@ expressions["BinaryExpression"] = function(expr)
             return "/" + op(_left, _right);
         }
     }
-}
+};

@@ -15,43 +15,43 @@ exports.command = GLOBAL.command = function command(cmd, conditional)
 
     if(createLabel.length > 0)
         createLabel = [];
-}
+};
 
 exports.unshiftCommand = function unshiftCommand(cmd, conditional)
 {
     conditional = !!conditional;
     var data = {type: "command", command: cmd, conditional: conditional, label: createLabel.slice(0)};
     currBlocks.unshift(data);
-}
+};
 
 exports.block = GLOBAL.block = function block(tagName, data)
 {
     currBlocks.push({type: "block", tagName: tagName, data: data || 0});
-}
+};
 
 exports.jump = function jump(label, conditional)
 {
     command("setblock %" + label + ":jmp% command_block 0 replace {Command:\"setblock ~ ~ ~ air\",auto:1b}", conditional);
-}
+};
 
 exports.rjump = function rjump(label, conditional)
 {
     command("summon ArmorStand %2:jmp% {NoGravity:1,CustomName:stack}");
     exports.jump(label, conditional);
     block(options.splitterBlock);
-}
+};
 
 exports.ret = function ret()
 {
     command("execute @e[type=ArmorStand,name=stack,c=-1] ~ ~ ~ setblock ~ ~ ~ command_block 0 replace {Command:\"setblock ~ ~ ~ air\",auto:1b}");
     command("kill @e[type=ArmorStand,name=stack,c=-1]");
     block(options.splitterBlock);
-}
+};
 
 exports.addLabel = function addLabel(name)
 {
     createLabel.push(name);
-}
+};
 
 exports.addFunction = function(label, fn)
 {
@@ -71,7 +71,7 @@ exports.addFunction = function(label, fn)
     functions[label] = currBlocks;
     currBlocks = _blocks;
     createLabel = _createLabel;
-}
+};
 
 /*exports.newFunction = function(label)
 {
@@ -177,7 +177,7 @@ exports.output = function output(outputHandler)
                     {
                         while(curr != 1)
                         {
-                            outputBlocks.push({x: x, y: y, z: z, tagName: "chain_command_block", data: direction})
+                            outputBlocks.push({x: x, y: y, z: z, tagName: "chain_command_block", data: direction});
                             move();
                         }
                     }
@@ -213,4 +213,4 @@ exports.output = function output(outputHandler)
     }
 
     outputHandler(outputBlocks, cmdBlocks);
-}
+};
