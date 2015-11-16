@@ -21,6 +21,8 @@ module.exports = function(ast, path, isMain)
         compileStatement(ast.body[i]);
     }
 
+    optimize.garbageCollect();
+
     if(isMain)
     {
         var Integer = types.Integer;
@@ -119,6 +121,7 @@ function compileBody(body, end, label, bodyScope)
 
         scope.increase(bodyScope);
         compileStatementList(_body);
+        optimize.garbageCollect();
         scope.decrease();
 
         if(end && body == _body)
@@ -582,7 +585,7 @@ expressions["NumericLiteral"] = function(expr)
 expressions["StringLiteral"] = function(expr)
 {
     if(expr.value[0] == "/")
-        return commandToBool(val);
+        return commandToBool(expr.value);
     else
         return expr.value;
 };

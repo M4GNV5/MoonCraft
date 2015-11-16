@@ -1,3 +1,5 @@
+var scope = require("./Scope.js");
+
 exports.selfAssign = function(left, val) // a = a + b --> a += b
 {
     var leftSupported = ["+", "-", "*", "/", "%"];
@@ -33,6 +35,16 @@ exports.removeDeadEnds = function(stmtList)
     return stmtList;
 };
 
+exports.garbageCollect = function()
+{
+    var currScope = scope.current();
+
+    for(var key in currScope)
+    {
+        if(currScope[key].clean)
+            currScope[key].clean();
+    }
+};
 
 exports.removeDoubleSplit = function(blocks)
 {

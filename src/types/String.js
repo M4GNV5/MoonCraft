@@ -1,4 +1,5 @@
 var nextName = require("./../lib/naming.js");
+var scope = require("./../lib/Scope.js");
 
 var nextId = 1;
 
@@ -17,6 +18,9 @@ function String(startVal, name)
     nextId++;
 
     this.set(startVal.toString());
+
+    //set invisible variable for garbage collector
+    scope.set("." + this.name, this);
 }
 
 String.prototype.set = function(val, conditional)
@@ -25,6 +29,11 @@ String.prototype.set = function(val, conditional)
         command("entitydata {0} {CustomName:\"{1}\"}".format(this.selector, val.toString()), conditional);
     else
         throw "Cannot assing '" + val.constructor.name + "' to a Boolean";
+};
+
+String.prototype.clean = function()
+{
+    command("kill {0}".format(this.selector));
 };
 
 String.prototype.toTellrawExtra = function()
