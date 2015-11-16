@@ -42,4 +42,4 @@ Scope.prototype.setGlobal = function(key, val)
     this.stack[0][key] = val;
 };
 
-module.exports = Scope;
+module.exports = new Scope();

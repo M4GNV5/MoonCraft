@@ -3,11 +3,10 @@ var fs = require("fs");
 var vm = require("vm");
 
 var types = require("./types.js");
+var scope = require("./scope.js");
 
 var parser = require("luaparse");
 var compile = require("./../compiler.js");
-
-var scope = compile.scope;
 
 var cache = [];
 var stdlib = {};
