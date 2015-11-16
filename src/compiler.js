@@ -370,7 +370,7 @@ statements["AssignmentStatement"] = function(stmt)
     assignStatement(stmt, scope.get.bind(scope), scope.set.bind(scope));
 }
 
-statements["LocalStatement"] = function()
+statements["LocalStatement"] = function(stmt)
 {
     assignStatement(stmt, function(key)
     {
