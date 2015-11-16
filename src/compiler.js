@@ -501,6 +501,13 @@ statements["IfStatement"] = function(stmt)
     base.addLabel(endLabel);
 }
 
+statements["DoStatement"] = function(stmt)
+{
+    scope.increase();
+    compileStatementList(stmt.body);
+    scope.decrease();
+}
+
 statements["WhileStatement"] = function(stmt)
 {
     var bodyLabel = nextName("while");
