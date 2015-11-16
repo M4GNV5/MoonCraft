@@ -3,7 +3,7 @@ var fs = require("fs");
 var vm = require("vm");
 
 var types = require("./types.js");
-var scope = require("./scope.js");
+var scope = require("./Scope.js");
 
 var parser = require("luaparse");
 var compile = require("./../compiler.js");
