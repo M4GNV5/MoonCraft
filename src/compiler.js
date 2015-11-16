@@ -557,26 +557,23 @@ statements["RepeatStatement"] = function(stmt)
     breakLabel = _breakLabel;
 }
 
-function staticLiteral(expr)
+expressions["BooleanLiteral"] = function(expr)
 {
     return expr.value;
-}
-
-expressions["BooleanLiteral"] = staticLiteral;
-expressions["NumericLiteral"] = staticLiteral;
+};
+expressions["NumericLiteral"] = function(expr)
+{
+    if(expr.raw.indexOf(".") != -1 && Math.floor(expr.value) == expr.value)
+        return expr.value + 0.0001;
+    else
+        return expr.value;
+};
 expressions["StringLiteral"] = function(expr)
 {
     if(expr.value[0] == "/")
-    {
-        var val = new types.Boolean(false);
-        command(expr.value.substr(1));
-        val.set(true, true);
-        return val;
-    }
+        return commandToBool(val);
     else
-    {
         return expr.value;
-    }
 };
 
 expressions["Identifier"] = function(expr)
