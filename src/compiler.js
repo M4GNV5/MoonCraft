@@ -351,6 +351,8 @@ function assignStatement(stmt, scopeGet, scopeSet)
     {
         var left = stmt.variables[i + stmt.init.length];
 
+        if(!left)
+            return;
         if(left.type != "Identifier")
             throwError("unsupported left hand side expression", stmt.loc);
 
