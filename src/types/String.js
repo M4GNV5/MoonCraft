@@ -25,16 +25,16 @@ String.prototype.set = function(val, conditional)
         command("entitydata {0} {CustomName:\"{1}\"}".format(this.selector, val.toString()), conditional);
     else
         throw "Cannot assing '" + val.constructor.name + "' to a Boolean";
-}
+};
 
 String.prototype.toTellrawExtra = function()
 {
     return JSON.stringify({selector: this.selector});
-}
+};
 
 String.prototype.isExact = function(val)
 {
     return "testfor {0} {CustomName:\"{1}\"}".format(this.selector, val);
-}
+};
 
 module.exports = String;

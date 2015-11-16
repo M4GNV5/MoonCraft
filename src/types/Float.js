@@ -55,7 +55,7 @@ Float.prototype.set = function(val, conditional)
     {
         throw "Cannot assing '" + val.constructor.name + "' to a Float";
     }
-}
+};
 
 Float.prototype.add = function(val, conditional)
 {
@@ -77,7 +77,7 @@ Float.prototype.add = function(val, conditional)
     {
         throw "Cannot add '" + val.constructor.name + "' to a Float";
     }
-}
+};
 
 Float.prototype.remove = function(val, conditional)
 {
@@ -99,7 +99,7 @@ Float.prototype.remove = function(val, conditional)
     {
         throw "Cannot remove '" + val.constructor.name + "' from a Float";
     }
-}
+};
 
 Float.prototype.multiplicate = function(val, conditional)
 {
@@ -121,7 +121,7 @@ Float.prototype.multiplicate = function(val, conditional)
     {
         throw "Cannot multiplicate '" + val.constructor.name + "' with a Float";
     }
-}
+};
 
 Float.prototype.divide = function(val, conditional)
 {
@@ -143,7 +143,7 @@ Float.prototype.divide = function(val, conditional)
     {
         throw "Cannot divide a Float through '" + val.constructor.name + "'";
     }
-}
+};
 
 Float.prototype.mod = function(val, conditional)
 {
@@ -165,19 +165,19 @@ Float.prototype.mod = function(val, conditional)
     {
         throw "Cannot assing '" + val.constructor.name + "' to a Float";
     }
-}
+};
 
 Float.prototype.toInteger = function()
 {
     var val = this.base.clone();
     val.divide(Float.accuracy);
     return val;
-}
+};
 
 Float.prototype.clone = function(cloneName)
 {
     return new Float(this, cloneName);
-}
+};
 
 Float.prototype.toTellrawExtra = function()
 {
@@ -190,20 +190,20 @@ Float.prototype.toTellrawExtra = function()
     var rightExtra = {score: {objective: Integer.scoreName, name: right.name}};
 
     return JSON.stringify(leftExtra) + ",\".\"," + JSON.stringify(rightExtra);
-}
+};
 
 Float.prototype.isExact = function(val)
 {
     val = convertStatic(val) || val;
     return this.base.isBetween(val, val);
-}
+};
 
 Float.prototype.isBetweenEx = function(min, max)
 {
     min = convertStatic(min) || min;
     max = convertStatic(max) || max;
     return this.base.isBetweenEx(min, max);
-}
+};
 
 Float.prototype.isBetween = function(min, max)
 {
@@ -211,6 +211,6 @@ Float.prototype.isBetween = function(min, max)
     max = convertStatic(max) || max;
 
     return this.base.isBetween(min, max);
-}
+};
 
 module.exports = Float;

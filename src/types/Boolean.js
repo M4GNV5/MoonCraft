@@ -26,17 +26,17 @@ Boolean.prototype.set = function(val, conditional)
         this.base.set(val ? 1 : 0, conditional);
     else
         throw "Cannot assing '" + val.constructor.name + "' to a Boolean" + (new Error()).stack;
-}
+};
 
 Boolean.prototype.toInteger = function()
 {
     return this.base;
-}
+};
 
 Boolean.prototype.clone = function(cloneName)
 {
     return new Boolean(this, cloneName);
-}
+};
 
 Boolean.prototype.toTellrawExtra = function()
 {
@@ -44,11 +44,11 @@ Boolean.prototype.toTellrawExtra = function()
     command(this.isExact(true));
     val.set("true", true);
     return val.toTellrawExtra();
-}
+};
 
 Boolean.prototype.isExact = function(val)
 {
     return this.base.isExact(val ? 1 : 0);
-}
+};
 
 module.exports = Boolean;
