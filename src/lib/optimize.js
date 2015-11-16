@@ -20,6 +20,20 @@ exports.selfAssign = function(left, val) // a = a + b --> a += b
     }
 };
 
+exports.removeDeadEnds = function(stmtList)
+{
+    var endExpressions = ["ReturnStatement", "BreakStatement"];
+
+    for(var i = 0; i < stmtList.length; i++)
+    {
+        var type = stmtList[i].type;
+        if(endExpressions.indexOf(stmtList[i].type) != -1)
+            return stmtList.slice(0, i + 1);
+    }
+    return stmtList;
+};
+
+
 exports.removeDoubleSplit = function(blocks)
 {
     var sBlock = options.splitterBlock;

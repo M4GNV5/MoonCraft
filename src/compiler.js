@@ -116,11 +116,13 @@ function compileBody(body, end, label, bodyScope)
     label = label || nextName("body");
     base.addFunction(label, function()
     {
+        var _body = optimize.removeDeadEnds(body);
+
         scope.increase(bodyScope);
-        compileStatementList(body);
+        compileStatementList(_body);
         scope.decrease();
 
-        if(end)
+        if(end && body == _body)
             end();
     });
     return label;
@@ -128,6 +130,7 @@ function compileBody(body, end, label, bodyScope)
 
 function compileStatementList(stmts)
 {
+    stmts = optimize.removeDeadEnds(stmts);
     for(var i = 0; i < stmts.length; i++)
     {
         compileStatement(stmts[i]);
