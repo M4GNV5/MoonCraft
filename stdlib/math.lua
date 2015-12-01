@@ -24,23 +24,29 @@ function pow(base, exponent)
 end
 
 function sqrt(value)
-    step = 32768
-    result = step
+    curr = int(value)
+    currplusone = curr
 
-    while step > 0 do
-        distance = result * result - value
-        step = step / 2
+    curr2 = 0
+    currpone2 = 0
 
-        if distance == 0 then
-            return result
-        elseif distance < 0 then
-            result = result + step
-        elseif distance > 0 then
-            result = result - step
-        end
+    if curr < 0 then
+        damnitfixthebugs = 0
+        return damnitfixthebugs
     end
 
-    return result
+    repeat
+        curr = (curr + value / curr) / 2 --ty Heron of Alexandria
+        currplusone = curr + 1
+        curr2 = curr * curr
+        currpone2 = currplusone * currplusone
+    until curr2 <= value and value < currpone2
+
+    if value - curr2 < currpone2 - value then
+        return curr
+    else
+        return currplusone
+    end
 end
 
 function sin(value)
