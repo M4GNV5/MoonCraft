@@ -57,8 +57,10 @@ try
 	var output = require("./output/" + options.output + ".js");
 	var parser = require("luaparse");
 	var base = require("./lib/base.js");
-	require("./lib/baselib.js");
+	var baseLib = require("./lib/baselib.js");
 	var compile = require("./compiler.js");
+
+	baseLib.setSrcPath(path.dirname(files[i]));
 
     if(files.length == 0)
 		throw "No input files specified";
@@ -75,6 +77,7 @@ try
 }
 catch(e)
 {
+	throw e;
 	var err = typeof e == "undefined" ? "Unknown error occured" : e.toString();
     console.log(err);
     process.exit(1);

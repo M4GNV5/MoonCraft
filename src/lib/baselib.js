@@ -10,6 +10,12 @@ var compile = require("./../compiler.js");
 
 var cache = [];
 var stdlib = {};
+var srcPath;
+
+exports.setSrcPath = function(_srcPath)
+{
+    srcPath = _srcPath;
+};
 
 (function()
 {
@@ -50,9 +56,12 @@ scope.set("import", function(name)
 
     if(ext == ".lua")
     {
+        var _srcPath = srcPath;
+        srcPath = path.dirname(file);
         var src = fs.readFileSync(file).toString();
         var ast = parser.parse(src, {locations: true});
         compile(ast, path.dirname(file), false);
+        srcPath = _srcPath;
     }
     else if(ext == ".js")
     {
