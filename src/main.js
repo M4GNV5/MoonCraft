@@ -71,13 +71,13 @@ try
 	    var ast = parser.parse(src, {locations: true});
 		compile(ast, path.dirname(files[i]), true);
 	}
+	command("__DONE__");
 
 	console.log("done");
 	base.output(output);
 }
 catch(e)
 {
-	throw e;
 	var err = typeof e == "undefined" ? "Unknown error occured" : e.toString();
     console.log(err);
     process.exit(1);

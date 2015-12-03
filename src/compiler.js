@@ -55,6 +55,7 @@ function compileFunction(stmt)
 
     var typeSignature = [];
     var returnSignature = [];
+    var argNames = [];
 
     var func = function()
     {
@@ -77,9 +78,12 @@ function compileFunction(stmt)
             }
 
             if(!typeSignature[i])
+            {
                 typeSignature[i] = val;
+                argNames[i] = nextName(name);
+            }
 
-            scope.set(name, createRuntimeVar(val, nextName(name)));
+            scope.set(name, createRuntimeVar(val, argNames[i]));
         }
         scope.decrease();
 
@@ -614,6 +618,7 @@ expressions["CallExpression"] = function(expr)
     }
     catch (e)
     {
+        throw e;
         var fnName = expr.base.name || base.name;
         throwError(e.toString() + "\n- " + "while calling " + fnName, expr.loc);
     }
