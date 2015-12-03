@@ -575,24 +575,20 @@ statements["RepeatStatement"] = function(stmt)
     breakLabel = _breakLabel;
 };
 
-expressions["BooleanLiteral"] = function(expr)
+function valueLiteral(expr)
 {
     return expr.value;
-};
+}
+
+expressions["BooleanLiteral"] = valueLiteral;
 expressions["NumericLiteral"] = function(expr)
 {
     if(expr.raw.indexOf(".") != -1 && Math.floor(expr.value) == expr.value)
-        return expr.value + 0.0001;
+        return expr.value + 0.000001;
     else
         return expr.value;
 };
-expressions["StringLiteral"] = function(expr)
-{
-    if(expr.value[0] == "/")
-        return commandToBool(expr.value);
-    else
-        return expr.value;
-};
+expressions["StringLiteral"] = valueLiteral;
 
 expressions["Identifier"] = function(expr)
 {
