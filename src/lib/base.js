@@ -1,4 +1,5 @@
 var optimize = require("./optimize.js");
+var scoreName = require("./types.js").Integer.scoreName;
 
 var functions = {};
 
@@ -36,15 +37,18 @@ exports.jump = function jump(label, conditional)
 
 exports.rjump = function rjump(label, conditional)
 {
-    command("summon ArmorStand %2:jmp% {NoGravity:1,CustomName:stack}");
+    command("summon ArmorStand %3:jmp% {NoGravity:1,CustomName:stack}");
+    command("scoreboard players add @e[type=ArmorStand,name=stack] {0} 1".format(scoreName));
     exports.jump(label, conditional);
     block(options.splitterBlock);
 };
 
 exports.ret = function ret()
 {
-    command("execute @e[type=ArmorStand,name=stack,c=-1] ~ ~ ~ setblock ~ ~ ~ command_block 0 replace {Command:\"setblock ~ ~ ~ air\",auto:1b}");
-    command("kill @e[type=ArmorStand,name=stack,c=-1]");
+    command("execute @e[type=ArmorStand,name=stack,score_{0}=1] ".format(scoreName) +
+        "~ ~ ~ setblock ~ ~ ~ command_block 0 replace {Command:\"setblock ~ ~ ~ air\",auto:1b}");
+    command("kill @e[type=ArmorStand,name=stack,score_{0}=1]".format(scoreName));
+    command("scoreboard players remove @e[type=ArmorStand,name=stack] {0} 1".format(scoreName));
     block(options.splitterBlock);
 };
 
