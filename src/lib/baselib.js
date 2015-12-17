@@ -110,3 +110,8 @@ scope.set("string", function(val, name)
 {
     return new types.String(val || "", name);
 });
+
+scope.set("score", function(selector, objective)
+{
+    return new types.Score(selector, objective);
+});

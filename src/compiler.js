@@ -178,7 +178,7 @@ function typeMatch(left, right)
 {
     var compatibleTypes = [
 		[types.Boolean, (true).constructor], //bool
-		[types.Integer, types.Float, (0).constructor], //int, float
+		[types.Integer, types.Float, types.Score, (0).constructor], //int, float
 		[types.String, ("").constructor] //string
 	];
 
@@ -287,6 +287,8 @@ function createRuntimeVar(val, name)
         return commandToBool(val, name);
     else if(typeof val == "string" || val.constructor == types.String)
         return new types.String(val, name);
+    else if(val instanceof types.Score)
+        return val;
 }
 
 function commandToBool(cmd, name)
