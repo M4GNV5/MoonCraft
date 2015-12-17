@@ -53,6 +53,7 @@ try
 	options.rcon_port = options.rcon_port || config.rcon_port || 25575;
 	options.rcon_password = options.rcon_password || options.rcon_pw || config.rcon_password || "hunter2";
 	options.schematic_file = options.schematic_file || options.file || config.schematic_file || "output.schematic";
+	options.debug = options.debug || config.debug || false;
 
 	var output = require("./output/" + options.output + ".js");
 	var parser = require("luaparse");
@@ -78,6 +79,9 @@ try
 }
 catch(e)
 {
+	if(options.debug)
+		throw e;
+
 	var err = typeof e == "undefined" ? "Unknown error occured" : e.toString();
     console.log(err);
     process.exit(1);

@@ -617,6 +617,13 @@ expressions["CallExpression"] = function(expr)
     catch (e)
     {
         var fnName = expr.base.name || base.name;
+
+        if(options.debug)
+        {
+            console.log("- while calling " + fnName);
+            throw e;
+        }
+
         throwError(e.toString() + "\n- while calling " + fnName, expr.loc);
     }
 };
