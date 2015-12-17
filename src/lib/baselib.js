@@ -4,6 +4,7 @@ var vm = require("vm");
 
 var types = require("./types.js");
 var scope = require("./Scope.js");
+GLOBAL.scope = scope;
 
 var parser = require("luaparse");
 var compile = require("./../compiler.js");
