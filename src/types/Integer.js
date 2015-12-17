@@ -11,7 +11,7 @@ function Integer(startVal, name)
 
 Integer.statics = [];
 
-Integer.scoreName = "cplVars";
+Integer.scoreName = "MoonCraft";
 
 Integer.prototype.set = function(val, conditional)
 {
