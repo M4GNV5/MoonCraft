@@ -115,3 +115,5 @@ scope.set("score", function(selector, objective)
 {
     return new types.Score(selector, objective);
 });
+
+scope.set("OBJECTIVE_NAME", types.Integer.scoreName);
