@@ -605,7 +605,13 @@ statements["ForNumericStatement"] = function(stmt)
         scope.increase(forScope);
 
         compileStatementList(stmt.body);
-        iterator.add(step);
+
+        if(typeof step == "object")
+            iterator.add(step);
+        else if(step < 0)
+            iterator.remove(-step);
+        else if(step > 0)
+            iterator.add(step);
 
         base.addLabel(checkLabel);
         command(checkCondition());
