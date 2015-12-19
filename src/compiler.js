@@ -537,8 +537,8 @@ statements["WhileStatement"] = function(stmt)
     {
         compileStatementList(stmt.body);
 
-        var condition = compileExpression(stmt.condition);
         base.addLabel(checkLabel);
+        var condition = compileExpression(stmt.condition);
         command(trueify(condition, stmt.condition.loc));
         base.jump(bodyLabel, true);
 
