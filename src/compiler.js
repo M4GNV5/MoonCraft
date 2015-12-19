@@ -30,6 +30,7 @@ module.exports = function(ast, path, isMain)
             base.unshiftCommand(["scoreboard players set", "static" + Integer.statics[i], Integer.scoreName, Integer.statics[i]].join(" "));
 
         base.unshiftCommand("scoreboard objectives add " + Integer.scoreName + " dummy MoonCraft Variables");
+        base.unshiftCommand("scoreboard objectives add " + base.scoreName + " dummy MoonCraft Stack");
     }
 };
 module.exports.scope = scope;

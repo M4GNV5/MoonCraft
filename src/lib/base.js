@@ -1,5 +1,5 @@
 var optimize = require("./optimize.js");
-var scoreName = require("./types.js").Integer.scoreName;
+var scoreName = exports.scoreName = "MoonCraftStack";
 
 var functions = {};
 
