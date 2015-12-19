@@ -29,7 +29,7 @@ String.prototype.set = function(val, conditional)
     if(typeof val == "string")
         command("entitydata {0} {CustomName:\"{1}\"}".format(this.selector, val.toString()), conditional);
     else
-        throw "Cannot assing '" + val.constructor.name + "' to a Boolean";
+        throw "Cannot assing '" + val.constructor.name + "' to a String";
 };
 
 String.prototype.clean = function()
