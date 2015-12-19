@@ -653,6 +653,15 @@ expressions["UnaryExpression"] = function(expr)
             return -1 * left;
         }
     }
+    else if(expr.operator == "#")
+    {
+        if(typeof left == "object")
+            throwError("Cannot get the length of a variable of a runtime variable", expr.loc);
+        else if(left.hasOwnProperty("length"))
+            return left.length;
+        else
+            throwError("Cannot get the length of a variable of type " + left.constructor.name, expr.loc);
+    }
 };
 
 expressions["LogicalExpression"] = function(expr)
@@ -751,6 +760,8 @@ expressions["BinaryExpression"] = function(expr)
         "*": function(a, b) { return a * b; },
         "/": function(a, b) { return a / b; },
         "%": function(a, b) { return a % b; },
+        "..": function(a, b) { return a.toString() + b.toString(); },
+        "^": function(a, b) { return Math.pow(a, b); },
         "==": function(a, b) { return a == b; },
         "!=": function(a, b) { return a != b; },
         ">": function(a, b) { return a > b; },
@@ -765,6 +776,14 @@ expressions["BinaryExpression"] = function(expr)
         "*": "multiplicate",
         "/": "divide",
         "%": "mod",
+        "..": function(a, b)
+        {
+            throwError("Operator '..' is not supported for runtime variables", expr.loc);
+        },
+        "^": function(a, b)
+        {
+            throwError("Unsupported operator '^' use the math function 'pow' instead", expr.loc);
+        },
         "==": function(a, b)
         {
             checkOperator(a, "isExact", operator, expr.loc);
