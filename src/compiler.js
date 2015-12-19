@@ -514,6 +514,112 @@ statements["IfStatement"] = function(stmt)
     base.addLabel(endLabel);
 };
 
+statements["ForNumericStatement"] = function(stmt)
+{
+    var iteratorName = stmt.variable.name;
+    var start = compileExpression(stmt.start);
+    var end = compileExpression(stmt.end);
+
+    var iterator = createRuntimeVar(start, nextName(iteratorName));
+    var step = stmt.step ? compileExpression(stmt.step) : 1;
+
+    var checkCondition;
+    if(typeof step == "number" && typeof end == "number")
+    {
+        checkCondition = function()
+        {
+            if(step > 0)
+                return iterator.isBetween(undefined, end);
+            else if(step <= 0)
+                return iterator.isBetween(end, undefined);
+        };
+    }
+    else if(typeof step == "number" && typeof end == "object")
+    {
+        checkCondition = function()
+        {
+            checkOperator(end, "clone", "clone", stmt.end.loc);
+            var clone = end.clone();
+            clone.remove(iterator);
+            if(step > 0)
+                return clone.isBetween(0, undefined);
+            else if(step <= 0)
+                return clone.isBetween(undefined, 0);
+        };
+    }
+    else if(typeof step == "object" && typeof end == "number")
+    {
+        checkCondition = function()
+        {
+            var success = new types.Boolean(false, "forsuccess");
+
+            command(step.isBetweenEx(0, undefined));
+            command(iterator.isBetween(undefined, end), true);
+            success.set(true, true);
+
+            command(step.isBetween(undefined, 0));
+            command(iterator.isBetween(end, undefined), true);
+            success.set(true, true);
+
+            return success.isExact(true);
+        };
+    }
+    else if(typeof step == "object" && typeof end == "object")
+    {
+        checkCondition = function()
+        {
+            var success = new types.Boolean(false, "forsuccess");
+
+            checkOperator(end, "clone", "clone", stmt.end.loc);
+            var clone = end.clone();
+            clone.remove(iterator);
+
+            command(step.isBetweenEx(0, undefined));
+            command(clone.isBetween(0, undefined), true);
+            success.set(true, true);
+
+            command(step.isBetween(undefined, 0));
+            command(clone.isBetween(undefined, 0), true);
+            success.set(true, true);
+
+            return success.isExact(true);
+        };
+    }
+
+    scope.increase();
+    scope.set(iteratorName, iterator);
+    var forScope = scope.decrease();
+
+    var bodyLabel = nextName("for");
+    var checkLabel = bodyLabel + "check";
+    var endLabel = bodyLabel + "end";
+
+    var _breakLabel = breakLabel;
+    breakLabel = endLabel;
+
+    base.jump(checkLabel);
+    block(options.splitterBlock);
+
+    base.addFunction(bodyLabel, function()
+    {
+        scope.increase(forScope);
+
+        compileStatementList(stmt.body);
+        iterator.add(step);
+
+        base.addLabel(checkLabel);
+        command(checkCondition());
+        base.jump(bodyLabel, true);
+        command("testforblock %-2:diff% minecraft:chain_command_block -1 {SuccessCount:0}");
+        base.jump(endLabel, true);
+
+        scope.decrease();
+    });
+    base.addLabel(endLabel);
+
+    breakLabel = _breakLabel;
+};
+
 statements["DoStatement"] = function(stmt)
 {
     scope.increase();
