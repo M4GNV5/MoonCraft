@@ -1,3 +1,6 @@
+PI = 3.14
+EULER = 2.72
+
 function abs(val)
     if val < 0 then
         return -val
@@ -6,7 +9,42 @@ function abs(val)
     end
 end
 
-randomSeed = js_eval("Math.round(Math.random() * 10000)")
+function floor(val)
+    intval = int(val)
+    diff = val - intval
+
+    if diff < 0 then
+        return intval - 1
+    else
+        return intval
+    end
+end
+
+function round(val)
+    intval = int(val)
+    diff = val - intval
+
+    if (diff > 0 and diff < 0.5) or (diff < 0 and diff >= -0.5) or diff == 0 then
+        return intval
+    elseif diff > 0 then
+        return intval + 1
+    else --diff < 0
+        return intval - 1
+    end
+end
+
+function ceil(val)
+    intval = int(val)
+    diff = val - intval
+
+    if diff > 0 then
+        return intval + 1
+    else
+        return intval
+    end
+end
+
+randomSeed = 42 * 666 - 3112 - 1337
 function random()
     randomSeed = (randomSeed * 214013 + 2531011) % 32768
     return randomSeed
