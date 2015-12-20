@@ -701,7 +701,7 @@ statements["RepeatStatement"] = function(stmt)
 
     block(options.splitterBlock);
     base.addLabel(endLabel);
-    optim.garbageCollect();
+    optimize.garbageCollect();
     scope.decrease();
 
     breakLabel = _breakLabel;
