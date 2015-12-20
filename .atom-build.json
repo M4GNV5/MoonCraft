@@ -1,0 +1,8 @@
+{
+    "cmd": "node",
+    "args": [
+        "{PROJECT_PATH}/src/main.js",
+        "{PROJECT_PATH}/examples/tests.lua"
+    ],
+    "cwd": "{PROJECT_PATH}/src"
+}
