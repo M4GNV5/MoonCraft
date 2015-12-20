@@ -646,8 +646,13 @@ statements["WhileStatement"] = function(stmt)
     base.jump(checkLabel);
     block(options.splitterBlock);
 
+    scope.increase();
+    var whileScope = scope.decrease();
+
     base.addFunction(bodyLabel, function()
     {
+        scope.increase(whileScope);
+
         compileStatementList(stmt.body);
 
         base.addLabel(checkLabel);
@@ -657,6 +662,8 @@ statements["WhileStatement"] = function(stmt)
 
         command("testforblock %-2:diff% minecraft:chain_command_block -1 {SuccessCount:0}");
         base.jump(endLabel, true);
+
+        scope.decrease();
     });
     base.addLabel(endLabel);
 
