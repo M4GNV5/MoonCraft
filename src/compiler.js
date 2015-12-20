@@ -717,8 +717,15 @@ expressions["CallExpression"] = function(expr)
 {
     var base = compileExpression(expr.base);
     var args = [];
+    var toBool = ["UnaryExpression", "LogicalExpression", "BinaryExpression"];
+
     for(var i = 0; i < expr.arguments.length; i++)
-        args[i] = compileExpression(expr.arguments[i]);
+    {
+        var val = compileExpression(expr.arguments[i]);
+        if(val[0] == "/" && toBool.indexOf(expr.arguments[i].type) != -1)
+            val = commandToBool(val);
+        args[i] = val;
+    }
 
     if(typeof base != "function")
         throwError(base.constructor.name + " is not a function", expr.loc);
