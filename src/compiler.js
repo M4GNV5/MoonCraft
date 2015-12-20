@@ -622,7 +622,11 @@ statements["ForNumericStatement"] = function(stmt)
 
         scope.decrease();
     });
+
     base.addLabel(endLabel);
+    scope.increase(forScope);
+    optimize.garbageCollect();
+    scope.decrease();
 
     breakLabel = _breakLabel;
 };
@@ -631,6 +635,7 @@ statements["DoStatement"] = function(stmt)
 {
     scope.increase();
     compileStatementList(stmt.body);
+    optimize.garbageCollect();
     scope.decrease();
 };
 
@@ -665,7 +670,11 @@ statements["WhileStatement"] = function(stmt)
 
         scope.decrease();
     });
+
     base.addLabel(endLabel);
+    scope.increase(whileScope);
+    optimize.garbageCollect();
+    scope.decrease();
 
     breakLabel = _breakLabel;
 };
@@ -690,9 +699,10 @@ statements["RepeatStatement"] = function(stmt)
     command("testforblock %-2:diff% minecraft:chain_command_block -1 {SuccessCount:0}");
     base.jump(endLabel, true);
 
-    scope.decrease();
     block(options.splitterBlock);
     base.addLabel(endLabel);
+    optim.garbageCollect();
+    scope.decrease();
 
     breakLabel = _breakLabel;
 };
