@@ -12,12 +12,6 @@ module.exports = function(ast, path, isMain)
 {
     for(var i = 0; i < ast.body.length; i++)
     {
-        if(ast.body[i].type == "FunctionDeclaration")
-            compileFunction(ast.body[i]);
-    }
-
-    for(var i = 0; i < ast.body.length; i++)
-    {
         compileStatement(ast.body[i]);
     }
 
@@ -44,77 +38,6 @@ function throwError(message, loc)
         locStr += loc.start.line + " column " + loc.start.column + " to line " + loc.end.line + " column " + loc.end.column;
 
     throw message + locStr;
-}
-
-function compileFunction(stmt)
-{
-    var funcName = stmt.identifier.name;
-    var bodyName;
-
-    scope.increase();
-    var funcScope = scope.decrease();
-
-    var typeSignature = [];
-    var returnSignature = [];
-    var argNames = [];
-
-    var func = function()
-    {
-        if(stmt.parameters.length != arguments.length)
-        {
-            throwError("function {0} requires {1} arguments not {2}"
-                .format(funcName, stmt.parameters.length, arguments.length), stmt.loc);
-        }
-
-        scope.increase(funcScope);
-        for(var i = 0; i < stmt.parameters.length; i++)
-        {
-            var name = stmt.parameters[i].name;
-            var val = arguments[i];
-
-            if(typeSignature[i] && !typeMatch(typeSignature[i], val))
-            {
-                throwError("function {0} requires argument {1} to be {2} not {3}"
-                    .format(funcName, i, typeSignature[i].constructor.name, val.constructor.name), stmt.loc);
-            }
-
-            if(!typeSignature[i])
-            {
-                typeSignature[i] = val;
-                argNames[i] = nextName(name);
-            }
-
-            scope.set(name, createRuntimeVar(val, argNames[i]));
-        }
-        scope.decrease();
-
-        if(!bodyName)
-        {
-            var _currRetSignature = currRetSignature;
-
-            currRetSignature = false;
-            bodyName = compileBody(stmt.body, base.ret, funcName, funcScope);
-            returnSignature = currRetSignature;
-
-            currRetSignature = _currRetSignature;
-        }
-
-
-        base.rjump(bodyName);
-
-        var retValue = [];
-        for(var i = 0; i < returnSignature.length; i++)
-        {
-            var type = returnSignature[i].constructor.name;
-            retValue[i] = fnReturns[i][type];
-        }
-        return retValue;
-    };
-
-    func.typeSignature = typeSignature;
-    func.returnSignature = returnSignature;
-
-    scope.set(funcName, func);
 }
 
 function compileBody(body, end, label, bodyScope)
@@ -394,7 +317,79 @@ statements["LocalStatement"] = function(stmt)
 
 statements["FunctionDeclaration"] = function(stmt)
 {
-    //do nothing
+    var funcName = stmt.identifier.name;
+    var bodyName;
+
+    scope.increase();
+    var funcStack = scope.save();
+    scope.decrease();
+
+    var typeSignature = [];
+    var returnSignature = [];
+    var argNames = [];
+
+    var func = function()
+    {
+        if(stmt.parameters.length != arguments.length)
+        {
+            throwError("function {0} requires {1} arguments not {2}"
+                .format(funcName, stmt.parameters.length, arguments.length), stmt.loc);
+        }
+
+        var _stack = scope.save();
+        scope.load(funcStack);
+        for(var i = 0; i < stmt.parameters.length; i++)
+        {
+            var name = stmt.parameters[i].name;
+            var val = arguments[i];
+
+            if(typeSignature[i] && !typeMatch(typeSignature[i], val))
+            {
+                throwError("function {0} requires argument {1} to be {2} not {3}"
+                    .format(funcName, i, typeSignature[i].constructor.name, val.constructor.name), stmt.loc);
+            }
+
+            if(!typeSignature[i])
+            {
+                typeSignature[i] = val;
+                argNames[i] = nextName(name);
+            }
+
+            scope.set(name, createRuntimeVar(val, argNames[i]));
+        }
+        scope.load(_stack);
+
+        if(!bodyName)
+        {
+            var _currRetSignature = currRetSignature;
+
+            currRetSignature = false;
+            scope.load(funcStack);
+            bodyName = compileBody(stmt.body, base.ret, funcName);
+            scope.load(_stack);
+            returnSignature = currRetSignature;
+
+
+            currRetSignature = _currRetSignature;
+        }
+
+
+        base.rjump(bodyName);
+
+        var retValue = [];
+        for(var i = 0; i < returnSignature.length; i++)
+        {
+            var type = returnSignature[i].constructor.name;
+            retValue[i] = fnReturns[i][type];
+        }
+        return retValue;
+    };
+
+    func.funcName = funcName;
+    func.typeSignature = typeSignature;
+    func.returnSignature = returnSignature;
+
+    scope.set(funcName, func);
 };
 
 statements["ReturnStatement"] = function(stmt)
@@ -421,7 +416,6 @@ statements["ReturnStatement"] = function(stmt)
         currRetSignature = args;
     }
 
-    fnReturns = [];
     for(var i = 0; i < args.length; i++)
     {
         var val = args[i];
