@@ -2,20 +2,16 @@ import("chat")
 import("math")
 
 function testSin()
-    value = float(0)
-    while value <= 6.28 do
+    for value = 0.0, 6.28, 3.14 / 4 do
         tellraw("sin of ", value, " is ", sin(value))
-        value = value + 3.14 / 4
     end
 end
 
 function testRandomAbsedSqrt()
-    i = 0
-    while i < 10 do
-        value = abs(random())
-        result = sqrt(value)
+    for i = 0, 10 do
+        local value = abs(random())
+        local result = sqrt(value)
         tellraw("sqrt of ", value, " is ", result)
-        i = i + 1
     end
 end
 
