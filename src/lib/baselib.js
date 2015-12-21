@@ -83,8 +83,8 @@ scope.set("js_eval", function(code)
     var context = {};
     for(var i = 0; i < scope.stack.length; i++)
     {
-        for(var key in scope[i])
-            context[key] = scope[i][key];
+        for(var key in scope.stack[i])
+            context[key] = scope.stack[i][key];
     }
 
     context = vm.createContext(context);
