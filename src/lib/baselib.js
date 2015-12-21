@@ -57,12 +57,17 @@ scope.set("import", function(name)
 
     if(ext == ".lua")
     {
+        var oldStack = scope.save();
+        scope.load([scope.stack[0]]);
+
         var _srcPath = srcPath;
         srcPath = path.dirname(file);
         var src = fs.readFileSync(file).toString();
         var ast = parser.parse(src, {locations: true});
         compile(ast, path.dirname(file), false);
         srcPath = _srcPath;
+
+        scope.load(oldStack);
     }
     else if(ext == ".js")
     {
