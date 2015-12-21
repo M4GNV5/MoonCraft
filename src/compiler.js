@@ -304,7 +304,7 @@ var expressions = {};
 
 statements["AssignmentStatement"] = function(stmt)
 {
-    assignStatement(stmt, scope.get.bind(scope), scope.set.bind(scope));
+    assignStatement(stmt, scope.get.bind(scope), scope.setGlobal.bind(scope));
 };
 
 statements["LocalStatement"] = function(stmt)
@@ -389,7 +389,10 @@ statements["FunctionDeclaration"] = function(stmt)
     func.typeSignature = typeSignature;
     func.returnSignature = returnSignature;
 
-    scope.set(funcName, func);
+    if(stmt.isLocal)
+        scope.set(funcName, func);
+    else
+        scope.setGlobal(funcName, func);
 };
 
 statements["ReturnStatement"] = function(stmt)

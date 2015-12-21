@@ -40,12 +40,12 @@ Scope.prototype.get = function(key)
 Scope.prototype.save = function()
 {
     return this.stack.slice(0);
-}
+};
 
 Scope.prototype.load = function(stack)
 {
     this.stack = stack;
-}
+};
 
 Scope.prototype.setGlobal = function(key, val)
 {

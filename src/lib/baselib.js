@@ -46,7 +46,7 @@ scope.set("import", function(name)
     {
         file = path.resolve(path.join(srcPath, name));
         if(!fs.existsSync(file))
-            throw "cannot import module " + name + ", file does not exist";
+            throw "cannot import module " + name + ", file " + file + " does not exist";
     }
 
     if(cache.indexOf(file) != -1)
@@ -59,6 +59,7 @@ scope.set("import", function(name)
     {
         var oldStack = scope.save();
         scope.load([scope.stack[0]]);
+        scope.increase();
 
         var _srcPath = srcPath;
         srcPath = path.dirname(file);
@@ -74,7 +75,7 @@ scope.set("import", function(name)
         var obj = require(file);
         for(var key in obj)
         {
-            scope.set(key, obj[key]);
+            scope.setGlobal(key, obj[key]);
         }
     }
     else

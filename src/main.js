@@ -61,17 +61,18 @@ try
 	var baseLib = require("./lib/baselib.js");
 	var compile = require("./compiler.js");
 
-	baseLib.setSrcPath(path.dirname(files[i]));
-
     if(files.length == 0)
 		throw "No input files specified";
 
+	scope.increase();
 	for(var i = 0; i < files.length; i++)
 	{
 		var src = fs.readFileSync(files[i]).toString();
 	    var ast = parser.parse(src, {locations: true});
+		baseLib.setSrcPath(path.dirname(files[i]));
 		compile(ast, path.dirname(files[i]), true);
 	}
+	scope.decrease();
 	command("__DONE__");
 
 	console.log("done");
