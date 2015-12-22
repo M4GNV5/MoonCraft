@@ -10,8 +10,8 @@ function abs(val)
 end
 
 function floor(val)
-    intval = int(val)
-    diff = val - intval
+    local intval = int(val)
+    local diff = val - intval
 
     if diff < 0 then
         return intval - 1
@@ -21,8 +21,8 @@ function floor(val)
 end
 
 function round(val)
-    intval = int(val)
-    diff = val - intval
+    local intval = int(val)
+    local diff = val - intval
 
     if (diff > 0 and diff < 0.5) or (diff < 0 and diff >= -0.5) or diff == 0 then
         return intval
@@ -34,8 +34,8 @@ function round(val)
 end
 
 function ceil(val)
-    intval = int(val)
-    diff = val - intval
+    local intval = int(val)
+    local diff = val - intval
 
     if diff > 0 then
         return intval + 1
@@ -51,7 +51,7 @@ function random()
 end
 
 function pow(base, exponent)
-    result = 1
+    local result = 1
 
     while exp > 0 do
         result = result * base
@@ -62,14 +62,14 @@ function pow(base, exponent)
 end
 
 function sqrt(value)
-    curr = int(value)
-    currplusone = curr
+    local curr = int(value)
+    local currplusone = curr
 
-    curr2 = 0
-    currpone2 = 0
+    local curr2 = 0
+    local currpone2 = 0
 
     if curr < 0 then
-        damnitfixthebugs = 0
+        local damnitfixthebugs = 0
         return damnitfixthebugs
     end
 
@@ -91,11 +91,11 @@ function sin(value)
 
     --https://upload.wikimedia.org/math/a/3/b/a3b692cd234b734e121ef24621f3635b.png
 
-    value = (-value + 3.14) % 6.28
+    local value = (-value + 3.14) % 6.28
 
-    result = value
+    local result = value
 
-    numerator = value
+    local numerator = value
     numerator = numerator * value
     numerator = numerator * value
     result = result - numerator / 6
