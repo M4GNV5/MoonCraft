@@ -26,7 +26,6 @@ module.exports = function(ast, path, isMain)
         base.unshiftCommand("scoreboard objectives add " + Integer.scoreName + " dummy MoonCraft Variables");
         base.unshiftCommand("scoreboard objectives add " + types.Table.indexScoreName + " dummy MoonCraft Table");
         base.unshiftCommand("scoreboard objectives add " + types.Table.tmpScoreName + " dummy MoonCraft temp");
-        base.unshiftCommand("scoreboard objectives add " + base.scoreName + " dummy MoonCraft Stack");
     }
 };
 module.exports.scope = scope;
