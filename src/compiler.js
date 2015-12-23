@@ -24,6 +24,8 @@ module.exports = function(ast, path, isMain)
             base.unshiftCommand(["scoreboard players set", "static" + Integer.statics[i], Integer.scoreName, Integer.statics[i]].join(" "));
 
         base.unshiftCommand("scoreboard objectives add " + Integer.scoreName + " dummy MoonCraft Variables");
+        base.unshiftCommand("scoreboard objectives add " + types.Table.indexScoreName + " dummy MoonCraft Table");
+        base.unshiftCommand("scoreboard objectives add " + types.Table.tmpScoreName + " dummy MoonCraft temp");
         base.unshiftCommand("scoreboard objectives add " + base.scoreName + " dummy MoonCraft Stack");
     }
 };
@@ -211,7 +213,7 @@ function createRuntimeVar(val, name)
         return commandToBool(val, name);
     else if(typeof val == "string" || val.constructor == types.String)
         return new types.String(val, name);
-    else if(val instanceof types.Score)
+    else if(val instanceof types.Score || val instanceof types.Table)
         return val;
 }
 
@@ -225,9 +227,29 @@ function commandToBool(cmd, name)
 
 function assignStatement(stmt, scopeGet, scopeSet)
 {
-    function assign(key, oldVal, newVal, optimized)
+    function assign(left, newVal, optimized)
     {
-        if(!oldVal)
+        var key;
+        var oldVal;
+        if(left.type == "Identifier")
+        {
+            key = left.name;
+            oldVal = scopeGet(key);
+        }
+        else if(left.type == "IndexExpression")
+        {
+            var index = compileExpression(left.index);
+            var base = compileExpression(left.base);
+
+            base.setAt(index, newVal);
+            return;
+        }
+        else
+        {
+            oldVal = compileExpression(left);
+        }
+
+        if(!oldVal && key)
         {
             var name = nextName(key);
             oldVal = createRuntimeVar(newVal, name);
@@ -244,10 +266,14 @@ function assignStatement(stmt, scopeGet, scopeSet)
             };
             oldVal[ops[optimized.operator]](newVal);
         }
-        else
+        else if(oldVal)
         {
             checkTypeMismatch(oldVal, newVal, stmt.loc);
             oldVal.set(newVal);
+        }
+        else
+        {
+            throwError("Invalid assign statement", stmt.loc);
         }
     }
 
@@ -258,14 +284,8 @@ function assignStatement(stmt, scopeGet, scopeSet)
         var left = stmt.variables[i];
         var right = stmt.init[i];
 
-        if(left.type != "Identifier")
-            throwError("unsupported left hand side expression", stmt.loc);
-
         var optimized = optimize.selfAssign(left, right);
 
-        var key = left.name;
-
-        var oldVal = scopeGet(key);
         var rightExpr = optimized ? optimized.argument : right;
         var newVal = compileExpression(rightExpr, true);
 
@@ -279,23 +299,18 @@ function assignStatement(stmt, scopeGet, scopeSet)
             rest = [];
         }
 
-        assign(key, oldVal, newVal, optimized);
+        assign(left, newVal, optimized);
     }
 
     for(var i = 0; i < rest.length; i++)
     {
         var left = stmt.variables[i + stmt.init.length];
-
         if(!left)
             return;
-        if(left.type != "Identifier")
-            throwError("unsupported left hand side expression", stmt.loc);
 
-        var key = left.name;
-        var oldVal = scopeGet(key);
         var newVal = rest[i];
 
-        assign(key, oldVal, newVal);
+        assign(left, newVal);
     }
 }
 
@@ -706,6 +721,31 @@ statements["RepeatStatement"] = function(stmt)
     breakLabel = _breakLabel;
 };
 
+expressions["TableConstructorExpression"] = function(expr)
+{
+    var args = [];
+    for(var i = 0; i < expr.fields.length; i++)
+    {
+        if(expr.fields[i].type != "TableValue")
+            throwError("Unsupported table field type", field.loc);
+
+        args[i] = compileExpression(expr.fields[i].value);
+    }
+
+    return new types.Table(args);
+}
+
+expressions["IndexExpression"] = function(expr)
+{
+    var base = compileExpression(expr.base);
+
+    checkOperator(base, "get", "[index]", expr.base.loc);
+
+    var index = compileExpression(expr.index);
+
+    return base.get(index);
+}
+
 function valueLiteral(expr)
 {
     return expr.value;
@@ -791,9 +831,7 @@ expressions["UnaryExpression"] = function(expr)
     }
     else if(expr.operator == "#")
     {
-        if(typeof left == "object")
-            throwError("Cannot get the length of a variable of a runtime variable", expr.loc);
-        else if(left.hasOwnProperty("length"))
+        if(left.hasOwnProperty("length"))
             return left.length;
         else
             throwError("Cannot get the length of a variable of type " + left.constructor.name, expr.loc);

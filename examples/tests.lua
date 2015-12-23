@@ -1,14 +1,11 @@
 import("chat")
-import("math")
 
-for i = -1.75, 1.75, 0.25 do
-    tellraw("floor(", i, ") = ", floor(i))
+local table = {42, 666, 3112}
+
+for i = 1, 7 do
+    table[#table + 1] = i
 end
 
-for i = -1.75, 1.75, 0.25 do
-    tellraw("ceil(", i, ") = ", ceil(i))
-end
-
-for i = -1.75, 1.75, 0.25 do
-    tellraw("round(", i, ") = ", round(i))
+for i = 1, #table do
+    tellraw("entry ", i, " is ", table[i])
 end
