@@ -53,9 +53,9 @@ end
 function pow(base, exponent)
     local result = 1
 
-    while exp > 0 do
+    while exponent > 0 do
         result = result * base
-        exp = exp - 1
+        exponent = exponent - 1
     end
 
     return result
@@ -114,4 +114,8 @@ function sin(value)
 
     return result
 
+end
+
+function cos(value)
+    return sin(value + 3.14 / 2)
 end
