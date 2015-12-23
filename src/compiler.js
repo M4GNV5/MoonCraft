@@ -361,11 +361,13 @@ statements["FunctionDeclaration"] = function(stmt)
 
         if(!bodyName)
         {
+            bodyName = funcName;
+
             var _currRetSignature = currRetSignature;
 
             currRetSignature = false;
             scope.load(funcStack);
-            bodyName = compileBody(stmt.body, base.ret, funcName);
+            compileBody(stmt.body, base.ret, funcName);
             scope.load(_stack);
             returnSignature = currRetSignature;
 
