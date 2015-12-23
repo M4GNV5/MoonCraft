@@ -127,4 +127,24 @@ scope.set("type", function(val)
     return val.constructor.name;
 });
 
+scope.set("table_getn", function(table)
+{
+    return table.length;
+});
+
+scope.set("table_maxn", function(table)
+{
+    return table.maxn;
+});
+
+scope.set("table_insert", function(table, index, value)
+{
+    table.insert(index, value);
+});
+
+scope.set("table_remove", function(table, index)
+{
+    table.remove(index);
+});
+
 scope.set("OBJECTIVE_NAME", types.Integer.scoreName);
