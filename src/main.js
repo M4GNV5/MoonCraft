@@ -48,7 +48,6 @@ try
 	options.y = options.y || config.y || 0;
 	options.z = options.z || config.z || 0;
 	options.length = options.length || options.l || config.length || 20;
-	options.returnType = options.returnType || config.returnType || "Float";
 	options.rcon_ip = options.rcon_ip || config.rcon_ip || "localhost";
 	options.rcon_port = options.rcon_port || config.rcon_port || 25575;
 	options.rcon_password = options.rcon_password || options.rcon_pw || config.rcon_password || "hunter2";
