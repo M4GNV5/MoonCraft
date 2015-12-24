@@ -173,4 +173,10 @@ Table.prototype.getScoreAt = function(index)
     }
 }
 
+Table.prototype.toTellrawExtra = function()
+{
+    var len = this.length.toTellrawExtra();
+    return "\"table[\",{0},\"]\"".format(len);
+}
+
 module.exports = Table;
