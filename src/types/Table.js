@@ -46,8 +46,14 @@ Table.prototype.set = function(val)
 
     if(val instanceof Table)
     {
-        console.log("WARNING: assigning one table to another results in spaghettis");
-        command("scoreboard players tag @e[type=ArmorStand,tag={0}] add {1}".format(val.name, this.name));
+        var otherSel = "@e[type=ArmorStand,tag={0}]".format(val.name);
+        var selfSel = "@e[type=ArmorStand,c=1,r=0,tag={0}]".format(val.name);
+        var newSel = "@e[type=ArmorStand,tag=tableTmp,c=1]";
+
+        command("execute {0} ~ ~ ~ summon ArmorStand ~ ~ ~ {NoGravity:true,Tags:[\"tableTmp\"]}".format(otherSel));
+        command("execute {0} ~ ~ ~ scoreboard players operation {1} {2} = {3} {2}".format(otherSel, newSel, Table.indexScoreName, selfSel));
+        command("execute {0} ~ ~ ~ scoreboard players operation {1} {2} = {3} {2}".format(otherSel, newSel, Table.scoreName, selfSel));
+        command("entitydata @e[type=ArmorStand,tag=tableTmp] {Tags:[\"{0}\"]}".format(this.name));
     }
     else if(val instanceof Array)
     {
