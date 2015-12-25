@@ -772,14 +772,10 @@ expressions["CallExpression"] = function(expr)
 {
     var base = compileExpression(expr.base);
     var args = [];
-    var toBool = ["UnaryExpression", "LogicalExpression", "BinaryExpression"];
 
     for(var i = 0; i < expr.arguments.length; i++)
     {
-        var val = compileExpression(expr.arguments[i]);
-        if(val[0] == "/" && toBool.indexOf(expr.arguments[i].type) != -1)
-            val = commandToBool(val);
-        args[i] = val;
+        args[i] = compileExpression(expr.arguments[i]);
     }
 
     if(typeof base != "function")
