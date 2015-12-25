@@ -2,6 +2,9 @@ var Integer = require("./Integer.js");
 
 function Score(selector, scoreName)
 {
+    if(typeof Integer == "object") //fix cross requiring
+        Integer = require("./Integer.js");
+
     this.selector = selector;
     this.scoreName = scoreName;
 }

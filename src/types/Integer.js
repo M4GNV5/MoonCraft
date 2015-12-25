@@ -1,3 +1,4 @@
+var Score = require("./Score.js");
 var nextName = require("./../lib/naming.js");
 
 function Integer(startVal, name)
@@ -15,7 +16,9 @@ Integer.scoreName = "MoonCraft";
 
 Integer.prototype.set = function(val, conditional)
 {
-    if(typeof val.toInteger == "function")
+    if(val instanceof Score)
+        this.operation("=", val.selector, val.scoreName, conditional);
+    else if(typeof val.toInteger == "function")
         this.operation("=", val.toInteger().name, Integer.scoreName, conditional);
     else if(typeof val == "number")
         command(["scoreboard players set", this.name, Integer.scoreName, val].join(" "), conditional);
@@ -25,7 +28,9 @@ Integer.prototype.set = function(val, conditional)
 
 Integer.prototype.add = function(val, conditional)
 {
-    if(typeof val == "object" && typeof val.toInteger == "function")
+    if(val instanceof Score)
+        this.operation("+=", val.selector, val.scoreName, conditional);
+    else if(typeof val == "object" && typeof val.toInteger == "function")
         this.operation("+=", val.toInteger().name, Integer.scoreName, conditional);
     else if(typeof val == "number")
         command(["scoreboard players add", this.name, Integer.scoreName, val].join(" "), conditional);
@@ -35,7 +40,9 @@ Integer.prototype.add = function(val, conditional)
 
 Integer.prototype.remove = function(val, conditional)
 {
-    if(typeof val == "object" && typeof val.toInteger == "function")
+    if(val instanceof Score)
+        this.operation("-=", val.selector, val.scoreName, conditional);
+    else if(typeof val == "object" && typeof val.toInteger == "function")
         this.operation("-=", val.toInteger().name, Integer.scoreName, conditional);
     else if(typeof val == "number")
         command(["scoreboard players remove", this.name, Integer.scoreName, val].join(" "), conditional);
@@ -45,7 +52,9 @@ Integer.prototype.remove = function(val, conditional)
 
 Integer.prototype.multiplicate = function(val, conditional)
 {
-    if(typeof val == "object" && typeof val.toInteger == "function")
+    if(val instanceof Score)
+        this.operation("*=", val.selector, val.scoreName, conditional);
+    else if(typeof val == "object" && typeof val.toInteger == "function")
         this.operation("*=", val.toInteger().name, Integer.scoreName, conditional);
     else if(typeof val == "number")
         this.staticOperation("*=", val, conditional);
@@ -55,7 +64,9 @@ Integer.prototype.multiplicate = function(val, conditional)
 
 Integer.prototype.divide = function(val, conditional)
 {
-    if(typeof val == "object" && typeof val.toInteger == "function")
+    if(val instanceof Score)
+        this.operation("/=", val.selector, val.scoreName, conditional);
+    else if(typeof val == "object" && typeof val.toInteger == "function")
         this.operation("/=", val.toInteger().name, Integer.scoreName, conditional);
     else if(typeof val == "number")
         this.staticOperation("/=", val, conditional);
@@ -65,7 +76,9 @@ Integer.prototype.divide = function(val, conditional)
 
 Integer.prototype.mod = function(val, conditional)
 {
-    if(typeof val == "object" && typeof val.toInteger == "function")
+    if(val instanceof Score)
+        this.operation("%=", val.selector, val.scoreName, conditional);
+    else if(typeof val == "object" && typeof val.toInteger == "function")
         this.operation("%=", val.toInteger().name, Integer.scoreName, conditional);
     else if(typeof val == "number")
         this.staticOperation("%=", val, conditional);
