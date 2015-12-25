@@ -213,16 +213,8 @@ function createRuntimeVar(val, name)
         return new types.String(val, name);
     else if(val instanceof types.Score)
         return val;
-
-    if(val instanceof types.Table)
-    {
-        if(val.isClone)
-        {
-            val.isClone = false;
-            return val;
-        }
+    else if(val instanceof Array || val instanceof types.Table)
         return new types.Table(val, name);
-    }
 }
 
 function commandToBool(cmd, name)
@@ -731,9 +723,7 @@ expressions["TableConstructorExpression"] = function(expr)
         args[i] = compileExpression(expr.fields[i].value);
     }
 
-    var val = new types.Table(args);
-    val.isClone = true;
-    return val;
+    return [args];
 }
 
 expressions["IndexExpression"] = function(expr)
