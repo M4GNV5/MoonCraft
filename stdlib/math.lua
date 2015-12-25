@@ -44,12 +44,6 @@ function ceil(val)
     end
 end
 
-randomSeed = 42 * 666 - 3112 - 1337
-function random()
-    randomSeed = (randomSeed * 214013 + 2531011) % 32768
-    return randomSeed
-end
-
 function pow(base, exponent)
     local result = 1
 
