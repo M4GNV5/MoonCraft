@@ -14,9 +14,12 @@ end
 function debug_break()
     await = 0
 
-    tellraw(chat_message("Breakpoint reached, click to continue", "red", false,
-        chat_event("run_command", "/scoreboard players set " .. js_eval("await.name") .. " " .. OBJECTIVE_NAME .. " 1")
-        ))
+    tellraw(
+        chat_message("Breakpoint reached. ", "red"),
+        chat_message("[continue]", "blue", false,
+            chat_event("run_command", "/scoreboard players set " .. js_eval("await.name") .. " " .. OBJECTIVE_NAME .. " 1")
+        )
+    )
 
     repeat
         -- wait...
