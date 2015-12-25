@@ -74,8 +74,11 @@ try
 	scope.decrease();
 	command("__DONE__");
 
-	console.log("done");
-	base.output(output);
+	base.output(function(blocks, cmdBlocks)
+	{
+		console.log("Code compiled to {0} command and {1} other blocks".format(cmdBlocks.length, blocks.length));
+		output(blocks, cmdBlocks);
+	});
 }
 catch(e)
 {
