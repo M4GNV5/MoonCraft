@@ -211,8 +211,18 @@ function createRuntimeVar(val, name)
         return commandToBool(val, name);
     else if(typeof val == "string" || val.constructor == types.String)
         return new types.String(val, name);
-    else if(val instanceof types.Score || val instanceof types.Table)
+    else if(val instanceof types.Score)
         return val;
+
+    if(val instanceof types.Table)
+    {
+        if(val.isClone)
+        {
+            val.isClone = false;
+            return val;
+        }
+        return new types.Table(val, name);
+    }
 }
 
 function commandToBool(cmd, name)
@@ -366,9 +376,12 @@ statements["FunctionDeclaration"] = function(stmt)
             {
                 typeSignature[i] = val;
                 argNames[i] = nextName(name);
+                scope.set(name, createRuntimeVar(val, argNames[i]));
             }
-
-            scope.set(name, createRuntimeVar(val, argNames[i]));
+            else
+            {
+                scope.get(name).set(val);
+            }
         }
         scope.load(_stack);
 
@@ -718,7 +731,9 @@ expressions["TableConstructorExpression"] = function(expr)
         args[i] = compileExpression(expr.fields[i].value);
     }
 
-    return new types.Table(args);
+    var val = new types.Table(args);
+    val.isClone = true;
+    return val;
 }
 
 expressions["IndexExpression"] = function(expr)
