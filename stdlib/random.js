@@ -1,8 +1,8 @@
-exports._rand_fast = function(result, rnd, withValue)
+exports._rand_fast = function(result, rnd, both)
 {
     for(var i = 0; i < 30; i++)
     {
         result.add(rnd);
-        withValue.multiplicate(2);
+        both.multiplicate(2);
     }
 }

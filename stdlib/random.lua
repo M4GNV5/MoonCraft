@@ -6,12 +6,11 @@ function rand_fast()
 
     local rnd = score("@r[type=ArmorStand,tag=random]", OBJECTIVE_NAME)
     local both = score("@e[type=ArmorStand,tag=random]", OBJECTIVE_NAME)
-    local withValue = score("@e[type=ArmorStand,tag=random,score_"..OBJECTIVE_NAME.."_min=1]", OBJECTIVE_NAME)
 
     local result = 0
     rnd = 1
 
-    _rand_fast(result, rnd, withValue)
+    _rand_fast(result, rnd, both)
 
     both = 1
     rnd = -1
