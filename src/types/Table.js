@@ -42,14 +42,15 @@ Table.tmpScoreName = "MoonCraftTmp";
 
 Table.prototype.set = function(val)
 {
+    command("kill @e[type=ArmorStand,tag={0}]".format(this.name));
+
     if(val instanceof Table)
     {
+        console.log("WARNING: assigning one table to another results in spaghettis")
         command("scoreboard players tag @e[type=ArmorStand,tag={0}] add {1}".format(val.name, this.name));
     }
     else if(val instanceof Array)
     {
-        command("kill @e[type=ArmorStand,tag={0}]".format(this.name));
-
         var sel = "@e[type=ArmorStand,tag=tableTmp,c=1]";
         var score = new Score(sel, Table.scoreName);
         var index = new Score(sel, Table.indexScoreName);
