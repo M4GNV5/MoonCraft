@@ -4,8 +4,7 @@ var nextName = require("./lib/naming.js");
 var optimize = require("./lib/optimize.js");
 var scope = require("./lib/Scope.js");
 
-var fnReturns = [];
-var currRetSignature = [];
+var currRet = [];
 var breakLabel;
 
 module.exports = function(ast, path, isMain)
@@ -377,28 +376,22 @@ statements["FunctionDeclaration"] = function(stmt)
         {
             bodyName = funcName;
 
-            var _currRetSignature = currRetSignature;
+            var _currRet = currRet;
 
-            currRetSignature = false;
+            currRet = false;
             scope.load(funcStack);
             compileBody(stmt.body, base.ret, funcName);
             scope.load(_stack);
-            returnSignature = currRetSignature;
+            returnSignature = currRet;
 
 
-            currRetSignature = _currRetSignature;
+            currRet = _currRet;
         }
 
 
         base.rjump(bodyName);
 
-        var retValue = [];
-        for(var i = 0; i < returnSignature.length; i++)
-        {
-            var type = returnSignature[i].constructor.name;
-            retValue[i] = fnReturns[i][type];
-        }
-        return retValue;
+        return returnSignature;
     };
 
     func.funcName = funcName;
@@ -419,33 +412,27 @@ statements["ReturnStatement"] = function(stmt)
         args[i] = compileExpression(stmt.arguments[i]);
     }
 
-    if(currRetSignature)
+    if(currRet)
     {
-        if(stmt.arguments.length != currRetSignature.length)
+        if(stmt.arguments.length != currRet.length)
             throwError("cannot return a different count of arguments than before", stmt.loc);
 
-        for(var i = 0; i < currRetSignature.length && i < args.length; i++)
+        for(var i = 0; i < currRet.length && i < args.length; i++)
         {
-            if(!typeMatch(currRetSignature[i], args[i]))
+            if(!typeMatch(currRet[i], args[i]))
                 throwError("cannot return a different type signature than before", stmt.arguments[i].loc);
+
+            currRet[i].set(args[i]);
         }
     }
     else
     {
-        currRetSignature = args;
-    }
-
-    for(var i = 0; i < args.length; i++)
-    {
-        var val = args[i];
-        var type = val.constructor.name;
-
-        fnReturns[i] = fnReturns[i] || {};
-
-        if(fnReturns[i][type])
-            fnReturns[i][type].set(val);
-        else
-            fnReturns[i][type] = createRuntimeVar(val, "ret" + i + type);
+        currRet = [];
+        for(var i = 0; i < args.length; i++)
+        {
+            var name = nextName("ret" + i + args[i].constructor.name);
+            currRet[i] = createRuntimeVar(args[i], name);
+        }
     }
 
     base.ret();
