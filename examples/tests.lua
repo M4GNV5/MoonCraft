@@ -1,14 +1,40 @@
+import("debug")
 import("chat")
 
-local table = {42, 666, 3112}
+local myint = 42
+local myfloat = 13.37
+local mybool = true
+local mystr = "hi"
+local mytable = {42, 666, 3112}
 
-for i = 1, 7 do
-    table[#table + 1] = i
+local i = 0
+
+function foo()
+    i = i + 1
+    if i == 3 then
+        bar()
+    else
+        foo()
+    end
 end
 
-table_insert(table, 2, 1337)
-table_remove(table, 7)
-
-for i = 1, #table do
-    tellraw("entry ", i, " is ", table[i])
+function bar()
+    i = i + 1
+    if i == 6 then
+        foobar()
+    else
+        bar()
+    end
 end
+
+function foobar()
+    i = i + 1
+    if i == 9 then
+        debug()
+    else
+        foobar()
+    end
+
+end
+
+foo()

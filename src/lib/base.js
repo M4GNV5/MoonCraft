@@ -37,7 +37,7 @@ exports.jump = function jump(label, conditional)
 
 exports.rjump = function rjump(label, conditional)
 {
-    command("summon ArmorStand %3:jmp% {NoGravity:1,Tags:[\"stack\"]}");
+    command("summon ArmorStand %3:jmp% {NoGravity:1,Tags:[\"stack\"],CustomName:\"{0}\"}".format(label));
     command("scoreboard players add @e[type=ArmorStand,tag=stack] {0} 1".format(scoreName));
     exports.jump(label, conditional);
     block(options.splitterBlock);
