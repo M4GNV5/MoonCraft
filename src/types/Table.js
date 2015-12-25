@@ -46,7 +46,7 @@ Table.prototype.set = function(val)
 
     if(val instanceof Table)
     {
-        console.log("WARNING: assigning one table to another results in spaghettis")
+        console.log("WARNING: assigning one table to another results in spaghettis");
         command("scoreboard players tag @e[type=ArmorStand,tag={0}] add {1}".format(val.name, this.name));
     }
     else if(val instanceof Array)
