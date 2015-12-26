@@ -42,7 +42,7 @@ Table.tmpScoreName = "MoonCraftTmp";
 
 Table.prototype.set = function(val)
 {
-    command("kill @e[type=ArmorStand,tag={0}]".format(this.name));
+    this.clean();
 
     if(val instanceof Table)
     {
@@ -82,6 +82,11 @@ Table.prototype.set = function(val)
     {
         throw "Cannot assing '" + val.constructor.name + "' to a Table";
     }
+}
+
+Table.prototype.clean = function()
+{
+    command("kill @e[type=ArmorStand,tag={0}]".format(this.name));
 }
 
 Table.prototype.insert = function(index, val)
