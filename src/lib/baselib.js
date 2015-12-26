@@ -44,7 +44,11 @@ scope.set("import", function(name)
     }
     else
     {
-        file = path.resolve(path.join(srcPath, name));
+        if(path.isAbsolute(name))
+            file = name;
+        else
+            file = path.resolve(path.join(srcPath, name));
+
         if(!fs.existsSync(file))
             throw "cannot import module " + name + ", file " + file + " does not exist";
     }
