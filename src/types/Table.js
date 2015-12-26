@@ -47,7 +47,7 @@ Table.prototype.set = function(val)
     if(val instanceof Table)
     {
         //super non hacky fix for table armorstands at same position
-        command("spreadplayers ~ ~ 6 7 false @e[tag={0}]".format(val.name));
+        command("spreadplayers ~ ~ 1 50 false @e[tag={0}]".format(val.name));
 
         var otherSel = "@e[type=ArmorStand,tag={0}]".format(val.name);
         var selfSel = "@e[type=ArmorStand,c=1,r=0,tag={0}]".format(val.name);
