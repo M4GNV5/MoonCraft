@@ -141,6 +141,11 @@ scope.set("table_maxn", function(table)
     return table.maxn;
 });
 
+scope.set("table_slice", function(table, start, end)
+{
+    table.slice(start, end);
+});
+
 scope.set("table_insert", function(table, index, value)
 {
     table.insert(index, value);

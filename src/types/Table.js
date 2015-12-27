@@ -131,6 +131,48 @@ Table.prototype.remove = function(index)
     }
 }
 
+Table.prototype.slice = function(start, end)
+{
+    if(typeof start == "number")
+    {
+        start = start - 1;
+        command("kill @e[type=ArmorStand,tag={0},score_{1}={2}]".format(this.name, Table.indexScoreName, start));
+        var index = new Score("@e[type=ArmorStand,tag={0}]".format(this.name), Table.indexScoreName);
+        index.remove(start);
+
+        if(typeof end == "number")
+            end = end - start;
+        else if(typeof (end || {}).toInteger == "function")
+            end.remove(start);
+    }
+    else if(typeof start.toInteger == "function")
+    {
+        start = start.toInteger();
+        start.remove(1);
+
+        var sel = "@e[type=ArmorStand,tag={0}]".format(this.name);
+        var selfSel = "@e[type=ArmorStand,c=1,r=0,tag={0}]".format(this.name);
+        command("execute {0} ~ ~ ~ scoreboard players operation {1} {2} -= {3} {4}".format(sel, selfSel, Table.indexScoreName, start.name, Integer.scoreName));
+        command("kill @e[type=ArmorStand,tag={0},score_{1}=0]".format(this.name, Table.indexScoreName));
+
+        if(typeof end == "number")
+            end = new Integer(end);
+
+        if(typeof (end || {}).toInteger == "function")
+            end.remove(start);
+    }
+
+    if(typeof end == "number")
+    {
+        command("kill @e[type=ArmorStand,tag={0},score_{1}_min={2}]".format(this.name, Table.indexScoreName, end + 1));
+    }
+    else if(typeof (end || {}).toInteger == "function")
+    {
+        this.getScoreAt(end);
+        command("kill @e[type=ArmorStand,tag={0},score_{1}_min=1]".format(this.name, Table.tmpScoreName));
+    }
+}
+
 Table.prototype.setAt = function(index, val)
 {
     var score = this.getScoreAt(index);
