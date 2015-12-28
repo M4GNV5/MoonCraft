@@ -176,26 +176,25 @@ Table.prototype.slice = function(start, end)
 Table.prototype.setAt = function(index, val)
 {
     var score = this.getScoreAt(index);
-    command("testfor " + score.selector);
-    command("testforblock %-1:diff% minecraft:chain_command_block -1 {SuccessCount:0}");
-    command("summon ArmorStand %1:jmp% {NoGravity:true,Tags:[\"tableTmp\"]}".format(this.name), true);
+    command("kill " + score.selector);
 
+    command("summon ArmorStand %1:jmp% {NoGravity:true,Tags:[\"tableTmp\"]}".format(this.name));
     var sel = "@e[type=ArmorStand,tag=tableTmp]";
     if(typeof index == "number")
     {
         var indexScore = new Score(sel, Table.indexScoreName);
-        indexScore.set(index, true);
+        indexScore.set(index);
     }
     else
     {
-        var tmpScore = new Score(sel, Table.tmpScoreName);
-        tmpScore.set(0, true);
         var indexScore = new Score(sel, Table.indexScoreName);
         indexScore.set(index);
     }
 
+    var valScore = new Score(sel, Table.scoreName);
+    valScore.set(val);
+
     command("entitydata {0} {Tags:[\"{1}\"]}".format(sel, this.name));
-    score.set(val);
 }
 
 Table.prototype.get = function(index)
