@@ -314,6 +314,26 @@ function assignStatement(stmt, scopeGet, scopeSet)
     }
 }
 
+function resolveType(name, loc)
+{
+    var alias = {
+        "Boolean": ["bool", "boolean"],
+        "Integer": ["int", "i32", "integer", "number"],
+        "Float": ["float"],
+        "String": ["string"],
+        "Table": ["table", "array"]
+    };
+
+    name = name.toLowerCase();
+    for(var key in alias)
+    {
+        if(alias[key].indexOf(name) != -1)
+            return types[key];
+    }
+
+    throwError("Unknown type " + name, loc);
+}
+
 var statements = {};
 var expressions = {};
 
@@ -355,7 +375,12 @@ statements["FunctionDeclaration"] = function(stmt)
         scope.load(funcStack);
         for(var i = 0; i < stmt.parameters.length; i++)
         {
-            var name = stmt.parameters[i].name;
+            var name;
+            if(stmt.parameters[i].type == "TypedIdentifier")
+                name = stmt.parameters[i].identifier.name;
+            else
+                name = stmt.parameters[i].name;
+
             var val = arguments[i];
 
             if(typeSignature[i] && !typeMatch(typeSignature[i], val))
@@ -384,7 +409,7 @@ statements["FunctionDeclaration"] = function(stmt)
 
             var _currRet = currRet;
 
-            currRet = false;
+            currRet = returnSignature;
             scope.load(funcStack);
             compileBody(stmt.body, base.ret, funcName);
             scope.load(_stack);
@@ -403,6 +428,62 @@ statements["FunctionDeclaration"] = function(stmt)
 
         return returnSignature;
     };
+
+    var _stack = scope.save();
+    scope.load(funcStack);
+
+    var allTyped = true;
+    for(var i = 0; i < stmt.parameters.length; i++)
+    {
+        var param = stmt.parameters[i];
+        if(param.type == "TypedIdentifier")
+        {
+            var name = param.identifier.name;
+            var ctor = resolveType(param.varType.name, param.varType.loc);
+
+            typeSignature[i] = new ctor(0, nextName(name), true);
+            scope.set(name, typeSignature[i]);
+        }
+        else
+        {
+            allTyped = false;
+            continue;
+        }
+    }
+    if(allTyped)
+        func.typeSignature = typeSignature;
+
+    if(stmt.returnTypes)
+    {
+        for(var i = 0; i < stmt.returnTypes.length; i++)
+        {
+            var typeName = stmt.returnTypes[i].name;
+            var ctor = resolveType(typeName, stmt.returnTypes[i].loc);
+
+            var name = nextName("ret" + i + typeName);
+            returnSignature[i] = new ctor(0, name, true);
+        }
+        func.returnSignature = returnSignature;
+    }
+    else
+    {
+        allTyped = false;
+    }
+
+    if(allTyped)
+    {
+        bodyName = funcName;
+
+        var _currRet = currRet;
+
+        currRet = returnSignature;
+        compileBody(stmt.body, base.ret, funcName);
+        currRet = _currRet;
+
+        func.funcName = funcName;
+    }
+
+    scope.load(_stack);
 
     if(stmt.isLocal)
         scope.set(funcName, func);
