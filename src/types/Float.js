@@ -23,7 +23,7 @@ function Float(startVal, name)
         throw "Cannot assing '" + startVal.constructor.name + "' to a Float";
     }
 
-    this.base = new Integer(startVal, name);
+    this.base = new Integer(startVal, this.name);
 }
 
 Float.accuracy = 2; //digits after the comma
