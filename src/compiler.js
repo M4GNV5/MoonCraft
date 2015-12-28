@@ -745,7 +745,7 @@ function valueLiteral(expr)
 expressions["BooleanLiteral"] = valueLiteral;
 expressions["NumericLiteral"] = function(expr)
 {
-    if(expr.raw.indexOf(".") != -1 && Math.floor(expr.value) == expr.value)
+    if(expr.raw && expr.raw.indexOf(".") != -1 && Math.floor(expr.value) == expr.value)
         return expr.value + 0.000001;
     else
         return expr.value;
