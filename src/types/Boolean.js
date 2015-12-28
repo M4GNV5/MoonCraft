@@ -13,8 +13,7 @@ function Boolean(startVal, name, silent)
     else
         startVal = startVal ? 1 : 0;
 
-    if(!silent)
-        this.base = new Integer(startVal, this.name);
+    this.base = new Integer(startVal, this.name, silent);
 }
 
 Boolean.prototype.set = function(val, conditional)
