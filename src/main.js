@@ -24,7 +24,7 @@ try
 		}
 		else
 		{
-			var arg = args[i][1] == "-" ? args[i].substr(0, 2) : args[i][1];
+			var arg = args[i][1] == "-" ? args[i].substr(2) : args[i][1];
 
 			i++;
 			var val;
