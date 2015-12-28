@@ -101,8 +101,8 @@ function checkTypeMismatch(left, right, loc)
 function typeMatch(left, right)
 {
     var compatibleTypes = [
-		[types.Boolean, (true).constructor], //bool
-		[types.Integer, types.Float, types.Score, (0).constructor], //int, float
+		[types.Integer, types.Float, types.Score, (0).constructor, types.Boolean, (true).constructor], //int, float
+        [types.Table, Array], //table, array
 		[types.String, ("").constructor] //string
 	];
 
