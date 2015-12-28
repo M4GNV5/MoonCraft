@@ -123,7 +123,7 @@ function move()
     }
 }
 
-var label = {};
+var label = exports.jmpLabel = {};
 var cmdBlocks = [];
 var outputBlocks = [];
 function format(cmd, index)

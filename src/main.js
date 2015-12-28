@@ -53,12 +53,14 @@ try
 	options.rcon_password = options.rcon_password || options.rcon_pw || config.rcon_password || "hunter2";
 	options.schematic_file = options.schematic_file || options.file || config.schematic_file || "output.schematic";
 	options.debug = options.debug || config.debug || false;
+	options.export = options.export || config.export || false;
 
 	var output = require("./output/" + options.output + ".js");
 	var parser = require("luaparse");
 	var base = require("./lib/base.js");
 	var baseLib = require("./lib/baselib.js");
 	var compile = require("./compiler.js");
+	var luaExport = require("./lib/export.js");
 
     if(files.length == 0)
 		throw "No input files specified";
@@ -71,11 +73,14 @@ try
 		baseLib.setSrcPath(path.dirname(files[i]));
 		compile(ast, path.dirname(files[i]), true);
 	}
-	scope.decrease();
+
 	command("__DONE__");
 
 	base.output(function(blocks, cmdBlocks)
 	{
+		if(options.export)
+			luaExport(options.export);
+
 		console.log("Code compiled to {0} command and {1} other blocks".format(cmdBlocks.length, blocks.length));
 		output(blocks, cmdBlocks);
 	});

@@ -366,9 +366,10 @@ statements["FunctionDeclaration"] = function(stmt)
 
             if(!typeSignature[i])
             {
-                typeSignature[i] = val;
                 argNames[i] = nextName(name);
-                scope.set(name, createRuntimeVar(val, argNames[i]));
+                val = createRuntimeVar(val, argNames[i])
+                typeSignature[i] = val;
+                scope.set(name, val);
             }
             else
             {
@@ -391,6 +392,10 @@ statements["FunctionDeclaration"] = function(stmt)
 
 
             currRet = _currRet;
+
+            func.funcName = funcName;
+            func.typeSignature = typeSignature;
+            func.returnSignature = returnSignature;
         }
 
 
@@ -398,10 +403,6 @@ statements["FunctionDeclaration"] = function(stmt)
 
         return returnSignature;
     };
-
-    func.funcName = funcName;
-    func.typeSignature = typeSignature;
-    func.returnSignature = returnSignature;
 
     if(stmt.isLocal)
         scope.set(funcName, func);
