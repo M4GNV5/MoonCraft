@@ -2,7 +2,7 @@ var nextName = require("./../lib/naming.js");
 var Integer = require("./Integer.js");
 var String = require("./String.js");
 
-function Boolean(startVal, name)
+function Boolean(startVal, name, silent)
 {
     this.name = name || nextName("bool");
 
@@ -13,7 +13,8 @@ function Boolean(startVal, name)
     else
         startVal = startVal ? 1 : 0;
 
-    this.base = new Integer(startVal, this.name);
+    if(!silent)
+        this.base = new Integer(startVal, this.name);
 }
 
 Boolean.prototype.set = function(val, conditional)

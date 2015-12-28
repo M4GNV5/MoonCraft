@@ -1,7 +1,7 @@
 var nextName = require("./../lib/naming.js");
 var Integer = require("./Integer.js");
 
-function Float(startVal, name)
+function Float(startVal, name, silent)
 {
     this.name = name || nextName("float");
 
@@ -18,12 +18,8 @@ function Float(startVal, name)
     {
         startVal = Math.floor(startVal * Float.accuracy);
     }
-    else
-    {
-        throw "Cannot assing '" + startVal.constructor.name + "' to a Float";
-    }
 
-    this.base = new Integer(startVal, this.name);
+    this.base = new Integer(startVal, this.name, silent);
 }
 
 Float.accuracy = 2; //digits after the comma

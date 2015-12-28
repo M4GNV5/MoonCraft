@@ -1,13 +1,15 @@
 var Score = require("./Score.js");
 var nextName = require("./../lib/naming.js");
 
-function Integer(startVal, name)
+function Integer(startVal, name, silent)
 {
     this.name = name || nextName("int");
 
     startVal = startVal || 0;
     var startVal = typeof startVal.toInteger == "function" ? startVal : (parseInt(startVal) || 0);
-    this.set(startVal);
+
+    if(!silent)
+        this.set(startVal);
 }
 
 Integer.statics = [];

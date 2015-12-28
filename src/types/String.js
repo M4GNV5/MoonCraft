@@ -4,8 +4,11 @@ var Integer = require("./Integer.js");
 
 var nextId = 1;
 
-function String(startVal, name)
+function String(startVal, name, silent)
 {
+    if(silent)
+        throw "cannot silently create a string";
+
     this.name = name || nextName("string");
     startVal = startVal || "";
     var _startVal = startVal.toString() || name;

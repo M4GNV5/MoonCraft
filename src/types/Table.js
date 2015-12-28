@@ -2,7 +2,7 @@ var Integer = require("./Integer.js");
 var Score = require("./Score.js");
 var nextName = require("./../lib/naming.js");
 
-function Table(val, name)
+function Table(val, name, silent)
 {
     this.name = name || nextName("table");
 
@@ -32,7 +32,7 @@ function Table(val, name)
         }
     });
 
-    if(val)
+    if(val && !silent)
         this.set(val);
 }
 
