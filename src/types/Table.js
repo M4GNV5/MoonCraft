@@ -50,8 +50,8 @@ Table.prototype.set = function(val)
         command("spreadplayers ~ ~ 1 50 false @e[tag={0}]".format(val.name));
 
         var otherSel = "@e[type=ArmorStand,tag={0}]".format(val.name);
-        var selfSel = "@e[type=ArmorStand,c=1,r=0,tag={0}]".format(val.name);
-        var newSel = "@e[type=ArmorStand,tag=tableTmp,c=1]";
+        var selfSel = "@e[type=ArmorStand,r=0,tag={0}]".format(val.name);
+        var newSel = "@e[type=ArmorStand,tag=tableTmp,r=0]";
 
         command("execute {0} ~ ~ ~ summon ArmorStand ~ ~ ~ {NoGravity:true,Tags:[\"tableTmp\"]}".format(otherSel));
         command("execute {0} ~ ~ ~ scoreboard players operation {1} {2} = {3} {2}".format(otherSel, newSel, Table.indexScoreName, selfSel));
@@ -226,7 +226,7 @@ Table.prototype.getScoreAt = function(index)
     }
     else
     {
-        throw "Cannot get value from a Table using an index of type '" + val.constructor.name + "'";
+        throw "Cannot get value from a Table using an index of type '" + index.constructor.name + "'";
     }
 }
 
