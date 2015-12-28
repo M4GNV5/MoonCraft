@@ -15,17 +15,6 @@ module.exports = function(ast, path, isMain)
     }
 
     optimize.garbageCollect();
-
-    if(isMain)
-    {
-        var Integer = types.Integer;
-        for(var i = 0; i < Integer.statics.length; i++)
-            base.unshiftCommand(["scoreboard players set", "static" + Integer.statics[i], Integer.scoreName, Integer.statics[i]].join(" "));
-
-        base.unshiftCommand("scoreboard objectives add " + Integer.scoreName + " dummy MoonCraft Variables");
-        base.unshiftCommand("scoreboard objectives add " + types.Table.indexScoreName + " dummy MoonCraft Table");
-        base.unshiftCommand("scoreboard objectives add " + types.Table.tmpScoreName + " dummy MoonCraft temp");
-    }
 };
 module.exports.scope = scope;
 
@@ -360,7 +349,7 @@ statements["FunctionDeclaration"] = function(stmt)
     scope.decrease();
 
     var typeSignature = [];
-    var returnSignature = [];
+    var returnSignature = false;
     var argNames = [];
 
     var func = function()
@@ -455,10 +444,12 @@ statements["FunctionDeclaration"] = function(stmt)
 
     if(stmt.returnTypes.length == 1 && stmt.returnTypes[0].name == "void")
     {
+        returnSignature = [];
         func.returnSignature = returnSignature;
     }
     else if(stmt.returnTypes.length > 0)
     {
+        returnSignature = [];
         for(var i = 0; i < stmt.returnTypes.length; i++)
         {
             var typeName = stmt.returnTypes[i].name;

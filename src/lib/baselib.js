@@ -4,6 +4,7 @@ var vm = require("vm");
 
 var types = require("./types.js");
 var scope = require("./Scope.js");
+var base = require("./base.js");
 GLOBAL.scope = scope;
 
 var parser = require("./../luaparse.js");
@@ -16,6 +17,21 @@ var srcPath;
 exports.setSrcPath = function(_srcPath)
 {
     srcPath = _srcPath;
+};
+exports.import = function(name, isMain)
+{
+    luaImport(name);
+
+    if(isMain)
+    {
+        var Integer = types.Integer;
+        for(var i = 0; i < Integer.statics.length; i++)
+            base.unshiftCommand(["scoreboard players set", "static" + Integer.statics[i], Integer.scoreName, Integer.statics[i]].join(" "));
+
+        base.unshiftCommand("scoreboard objectives add " + Integer.scoreName + " dummy MoonCraft Variables");
+        base.unshiftCommand("scoreboard objectives add " + types.Table.indexScoreName + " dummy MoonCraft Table");
+        base.unshiftCommand("scoreboard objectives add " + types.Table.tmpScoreName + " dummy MoonCraft temp");
+    }
 };
 
 (function()
@@ -35,7 +51,8 @@ exports.setSrcPath = function(_srcPath)
 
 scope.set("command", require("./base.js").command);
 
-scope.set("import", function(name)
+scope.set("import", luaImport);
+function luaImport(name)
 {
     var file;
     if(stdlib.hasOwnProperty(name))
@@ -86,7 +103,7 @@ scope.set("import", function(name)
     {
         throw "cannot import module " + name + ", unknown file extension " + ext;
     }
-});
+}
 
 scope.set("js_eval", function(code)
 {
