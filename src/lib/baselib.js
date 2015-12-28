@@ -6,7 +6,7 @@ var types = require("./types.js");
 var scope = require("./Scope.js");
 GLOBAL.scope = scope;
 
-var parser = require("luaparse");
+var parser = require("./../luaparse.js");
 var compile = require("./../compiler.js");
 
 var cache = [];

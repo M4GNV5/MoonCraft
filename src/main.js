@@ -56,7 +56,7 @@ try
 	options.export = options.export || config.export || false;
 
 	var output = require("./output/" + options.output + ".js");
-	var parser = require("luaparse");
+	var parser = require("./luaparse.js");
 	var base = require("./lib/base.js");
 	var baseLib = require("./lib/baselib.js");
 	var compile = require("./compiler.js");

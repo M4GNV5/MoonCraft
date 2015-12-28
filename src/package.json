@@ -5,8 +5,5 @@
     "repository": "https://github.com/M4GNV5/CPL.git",
     "homepage": "https://github.com/M4GNV5/CPL",
     "author": "Jakob Löw <eragonjml@googlemail.com>",
-    "dependencies": {
-        "luaparse": "^0.2.0"
-    },
     "main": "main.js"
 }
