@@ -453,7 +453,11 @@ statements["FunctionDeclaration"] = function(stmt)
     if(allTyped)
         func.typeSignature = typeSignature;
 
-    if(stmt.returnTypes)
+    if(stmt.returnTypes.length == 1 && stmt.returnTypes[0].name == "void")
+    {
+        func.returnSignature = returnSignature;
+    }
+    else if(stmt.returnTypes.length > 0)
     {
         for(var i = 0; i < stmt.returnTypes.length; i++)
         {
