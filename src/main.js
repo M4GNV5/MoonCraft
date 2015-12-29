@@ -27,10 +27,10 @@ try
 			var arg = args[i][1] == "-" ? args[i].substr(2) : args[i][1];
 
 			i++;
-			var val;
+			var val = true;
 
 			if(args[i][0] == "-")
-				val = true;
+				i--;
 			else
 				val = args[i];
 
