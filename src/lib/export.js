@@ -12,7 +12,12 @@ scope.setGlobal("__extern_naming", function(data)
 
 scope.setGlobal("__extern_statics", function(data)
 {
-    types.Integer.statics = types.Integer.statics.concat(JSON.parse(data));
+    data = JSON.parse(data);
+    for(var i = 0; i < data.length; i++)
+    {
+        if(types.Integer.statics.indexOf((data[i]) == -1))
+            types.Integer.statics.push(data[i]);
+    }
 });
 
 scope.setGlobal("__extern", function(name, pos, args, ret)
