@@ -7,7 +7,7 @@ scope.setGlobal("__extern_naming", function(data)
 {
     var data = JSON.parse(data);
     for(var key in data)
-        nextName.data[key] += data[key];
+        nextName.names[key] = nextName.names[key] + data[key] || data[key];
 });
 
 scope.setGlobal("__extern_statics", function(data)
@@ -54,7 +54,7 @@ scope.setGlobal("__extern", function(name, pos, args, ret)
 module.exports = function(file)
 {
     var globals = scope.stack[0];
-    var namingData = nextName.data;
+    var namingData = nextName.names;
     var statics = types.Integer.statics;
     var jmpLabel = base.jmpLabel;
 

@@ -1,8 +1,8 @@
-var names = {};
-
-module.exports = function(name)
+var func = function(name)
 {
-    names[name] = names[name] + 1 || 0;
-    return name + names[name];
+    func.names[name] = func.names[name] + 1 || 0;
+    return name + func.names[name];
 };
-module.exports.data = names;
+func.names = {};
+
+module.exports = func;
