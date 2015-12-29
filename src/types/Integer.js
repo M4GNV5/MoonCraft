@@ -95,8 +95,10 @@ Integer.prototype.operation = function(op, otherName, otherScore, conditional)
 
 Integer.prototype.staticOperation = function(op, val, conditional)
 {
-    if(Integer.statics.indexOf(val) == -1)
+    if(!options.export && Integer.statics.indexOf(val) == -1)
         Integer.statics.push(val);
+    else
+        command(["scoreboard players set", "static" + val, Integer.scoreName, val].join(" "));
     this.operation(op, "static" + val.toString(), Integer.scoreName, conditional);
 };
 

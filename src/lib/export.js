@@ -10,16 +10,6 @@ scope.setGlobal("__extern_naming", function(data)
         nextName.names[key] = nextName.names[key] + data[key] || data[key];
 });
 
-scope.setGlobal("__extern_statics", function(data)
-{
-    data = JSON.parse(data);
-    for(var i = 0; i < data.length; i++)
-    {
-        if(types.Integer.statics.indexOf((data[i]) == -1))
-            types.Integer.statics.push(data[i]);
-    }
-});
-
 scope.setGlobal("__extern", function(name, pos, args, ret)
 {
     base.jmpLabel[name] = {x: pos[0], y: pos[1], z: pos[2]};
@@ -55,13 +45,11 @@ module.exports = function(file)
 {
     var globals = scope.stack[0];
     var namingData = nextName.names;
-    var statics = types.Integer.statics;
     var jmpLabel = base.jmpLabel;
 
     var exportCode = "-- auto generated code, you should probably not change anything";
 
     exportCode += "\n__extern_naming({0})".format(JSON.stringify(JSON.stringify(namingData)));
-    exportCode += "\n__extern_statics({0})".format(JSON.stringify(JSON.stringify(statics)));
 
     for(var key in globals)
     {
