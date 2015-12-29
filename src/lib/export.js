@@ -41,6 +41,13 @@ scope.setGlobal("__extern", function(name, pos, args, ret)
     });
 });
 
+scope.setGlobal("__extern_var", function(name, type, privateName)
+{
+    var val = new types[type](0, privateName, true);
+    val.__imported = true;
+    scope.setGlobal(name, val);
+});
+
 module.exports = function(file)
 {
     var globals = scope.stack[0];
@@ -53,17 +60,25 @@ module.exports = function(file)
 
     for(var key in globals)
     {
-        if(typeof globals[key] != "function" || !globals[key].funcName)
-            continue;
+        if(typeof globals[key] == "function" && globals[key].funcName)
+        {
+            var name = JSON.stringify(globals[key].funcName);
+            var typeSignature = tabelify(globals[key].typeSignature);
+            var returnSignature = tabelify(globals[key].returnSignature);
 
-        var name = JSON.stringify(globals[key].funcName);
-        var typeSignature = tabelify(globals[key].typeSignature);
-        var returnSignature = tabelify(globals[key].returnSignature);
+            var pos = jmpLabel[key];
+            var _pos = "{{0}, {1}, {2}}".format(pos.x, pos.y, pos.z);
 
-        var pos = jmpLabel[key];
-        var _pos = "{{0}, {1}, {2}}".format(pos.x, pos.y, pos.z);
+            exportCode += "\n__extern({0}, {1}, {2}, {3})".format(name, _pos, typeSignature, returnSignature);
+        }
+        else if(typeof globals[key] == "object" && !globals[key].__imported)
+        {
+            var name = JSON.stringify(key);
+            var type = JSON.stringify(globals[key].constructor.name);
+            var privateName = JSON.stringify(globals[key].name);
 
-        exportCode += "\n__extern({0}, {1}, {2}, {3})".format(name, _pos, typeSignature, returnSignature);
+            exportCode += "\n__extern_var({0}, {1}, {2})".format(name, type, privateName);
+        }
     }
 
     fs.writeFileSync(file, exportCode);
