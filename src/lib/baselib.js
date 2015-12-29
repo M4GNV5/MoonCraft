@@ -12,12 +12,8 @@ var compile = require("./../compiler.js");
 
 var cache = [];
 var stdlib = {};
-var srcPath;
+exports.srcPath = "";
 
-exports.setSrcPath = function(_srcPath)
-{
-    srcPath = _srcPath;
-};
 exports.import = function(name, isMain)
 {
     luaImport(name);
@@ -64,7 +60,7 @@ function luaImport(name)
         if(path.isAbsolute(name))
             file = name;
         else
-            file = path.resolve(path.join(srcPath, name));
+            file = path.resolve(path.join(exports.srcPath, name));
 
         if(!fs.existsSync(file))
             throw "cannot import module " + name + ", file " + file + " does not exist";
@@ -82,12 +78,25 @@ function luaImport(name)
         scope.load([scope.stack[0]]);
         scope.increase();
 
-        var _srcPath = srcPath;
-        srcPath = path.dirname(file);
-        var src = fs.readFileSync(file).toString();
-        var ast = parser.parse(src, {locations: true});
+        var _srcPath = exports.srcPath;
+        exports.srcPath = path.dirname(file);
+        var _file = compile.file;
+        compile.file = file;
+
+        try
+        {
+            var src = fs.readFileSync(file).toString();
+            var ast = parser.parse(src, {locations: true});
+        }
+        catch(e)
+        {
+            console.log("in file " + file);
+            throw e;
+        }
         compile(ast, path.dirname(file), false);
-        srcPath = _srcPath;
+
+        exports.srcPath = _srcPath;
+        compile.file = _file;
 
         scope.load(oldStack);
     }

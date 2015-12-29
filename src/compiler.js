@@ -7,7 +7,7 @@ var scope = require("./lib/Scope.js");
 var currRet = [];
 var breakLabel;
 
-module.exports = function(ast, path, isMain)
+var compile = function(ast, path, isMain)
 {
     for(var i = 0; i < ast.body.length; i++)
     {
@@ -16,15 +16,16 @@ module.exports = function(ast, path, isMain)
 
     optimize.garbageCollect();
 };
-module.exports.scope = scope;
+compile.scope = scope;
+module.exports = compile;
 
 function throwError(message, loc)
 {
     var locStr = " at line ";
     if(loc.start.line == loc.end.line)
-        locStr += loc.start.line + " column " + loc.start.column;
+        locStr += loc.start.line + " column " + loc.start.column + " in " + compile.file;
     else
-        locStr += loc.start.line + " column " + loc.start.column + " to line " + loc.end.line + " column " + loc.end.column;
+        locStr += loc.start.line + " column " + loc.start.column + " to line " + loc.end.line + " column " + loc.end.column + " in " + compile.file;
 
     throw message + locStr;
 }

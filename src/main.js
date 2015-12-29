@@ -65,7 +65,7 @@ try
     if(files.length == 0)
 		throw "No input files specified";
 
-	baseLib.setSrcPath(process.cwd());
+	baseLib.srcPath = process.cwd();
 
 	for(var i = 0; i < files.length; i++)
 	{
