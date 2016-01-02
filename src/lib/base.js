@@ -77,6 +77,28 @@ exports.addFunction = function(label, fn)
     createLabel = _createLabel;
 };
 
+exports.reset = function()
+{
+    functions = {};
+
+    currBlocks = [];
+    currLabel;
+    blockCache = {};
+    createLabel = [];
+
+    x = options.x;
+    y = options.y;
+    z = options.z;
+    maxLength = options.length;
+    direction = 5;
+    nextDirection;
+    curr = 1;
+
+    label = exports.jmpLabel = {};
+    cmdBlocks = [];
+    outputBlocks = [];
+};
+
 /*exports.newFunction = function(label)
 {
     functions[currLabel] = currBlocks;

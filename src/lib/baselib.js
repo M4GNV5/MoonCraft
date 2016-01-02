@@ -34,6 +34,11 @@ exports.import = function(name, isMain)
     }
 };
 
+exports.reset = function()
+{
+    cache = [];
+};
+
 (function()
 {
     var stdlibPath = path.join(__dirname, "../../stdlib/");
