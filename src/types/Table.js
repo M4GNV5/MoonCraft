@@ -6,7 +6,9 @@ function Table(val, name, silent)
 {
     this.name = name || nextName("table");
 
-    var lengthProperty = {
+    Table.used = true;
+
+    Object.defineProperty(this, "length", {
         get: function()
         {
             var val = new Integer();
@@ -15,9 +17,7 @@ function Table(val, name, silent)
                 .format(this.name, val.name, Integer.scoreName));
             return val;
         }
-    };
-
-    Object.defineProperty(this, "length", lengthProperty);
+    });
 
     Object.defineProperty(this, "maxn", {
         get: function()
@@ -37,6 +37,7 @@ function Table(val, name, silent)
 }
 
 Table.scoreName = Integer.scoreName;
+Table.used = false;
 Table.indexScoreName = "MoonCraftTable";
 Table.tmpScoreName = "MoonCraftTmp";
 

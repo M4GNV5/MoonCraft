@@ -25,8 +25,12 @@ exports.import = function(name, isMain)
             base.unshiftCommand(["scoreboard players set", "static" + Integer.statics[i], Integer.scoreName, Integer.statics[i]].join(" "));
 
         base.unshiftCommand("scoreboard objectives add " + Integer.scoreName + " dummy MoonCraft Variables");
-        base.unshiftCommand("scoreboard objectives add " + types.Table.indexScoreName + " dummy MoonCraft Table");
-        base.unshiftCommand("scoreboard objectives add " + types.Table.tmpScoreName + " dummy MoonCraft temp");
+
+        if(types.Table.used)
+        {
+            base.unshiftCommand("scoreboard objectives add " + types.Table.indexScoreName + " dummy MoonCraft Table");
+            base.unshiftCommand("scoreboard objectives add " + types.Table.tmpScoreName + " dummy MoonCraft temp");
+        }
     }
 };
 
