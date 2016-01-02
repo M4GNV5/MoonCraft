@@ -5,7 +5,7 @@ for(var i = 0; i < itemIds.length; i++)
     tagNames[itemIds[i].text_type] = itemIds[i].type;
 }
 
-module.exports = function(blocks, cmdBlocks)
+module.exports = function(blocks, cmdBlocks, callback)
 {
     console.log("Outputting as schematic to " + options.schematic_file);
 
@@ -65,10 +65,17 @@ module.exports = function(blocks, cmdBlocks)
 
     toNBT(data, schema, function(err, _data)
     {
-        if(err)
-            throw err;
+        if(callback)
+        {
+            callback(err, _data);
+        }
+        else
+        {
+            if(err)
+                throw err;
 
-        require("fs").writeFileSync(options.schematic_file, _data);
+            require("fs").writeFileSync(options.schematic_file, _data);
+        }
     });
 }
 
@@ -155,17 +162,7 @@ var toNBT = (function()
 
         var buff = Buffer.concat(this.buffer);
 
-        if(schema.zipped)
-        {
-            zlib.gzip(buff, function(err, compressed)
-            {
-                cb(err, compressed);
-            });
-        }
-        else
-        {
-            cb(undefined, buff);
-        }
+        cb(undefined, buff);
     }
 
     Writer.prototype.byte = createWriter("writeUInt8", 1);
