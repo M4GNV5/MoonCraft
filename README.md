@@ -1,5 +1,6 @@
 #MoonCraft
 Lua to commandblock compiler
+###[Try it in your browser](http://m4gnv5.github.io/MoonCraft-Demo/)
 
 ##Example
 ```lua
